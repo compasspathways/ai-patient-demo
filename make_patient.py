@@ -50,7 +50,7 @@ messages = [
     }
 ]
 
-
+fact = ""
 for i in range(num_memories):
     print(f">>> Creating content for memory {i+1}/3 ...")
     importance = 0 if i == 0 else utils.get_importance(fact, classifier, 1, 1)

@@ -27,7 +27,7 @@ def patient_response(message, history):
 
 gr.ChatInterface(
     patient_response,
-    title=f"AI Patient",
+    title="AI Patient",
     description=f"Talking to {patient_id.title()} 👤 ",
     submit_btn="Send",
     retry_btn=None,
