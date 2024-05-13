@@ -1,5 +1,7 @@
 cache
 
+__pyache__
+
 .env
 
 venv*
