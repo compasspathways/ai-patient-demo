@@ -12,7 +12,7 @@ from source import patient_maker, utils
 # %%
 dotenv.load_dotenv(override=True)
 maker = patient_maker.PatientMaker()
-prompts = utils.get_prompts()
+prompts = utils.get_prompts("make")
 classifier = utils.get_classifier()
 s3d = sentiment3d.Sentiment3D()
 
@@ -84,16 +84,6 @@ for i in range(num_memories):
     valences.append(np.round(s3d.get_utterance_sentiment(fact)["valence"], 3))
 print(">>> Finished!")
 
-i = 0
-for m in messages[1:]:
-    if m["role"] == "assistant":
-        print("Answer:    " + m["content"] + "\n" + str(i))
-    else:
-        print("Question:  " + m["content"])
-        print("Topic:     " + topics[i])
-        print("Valence:   " + str(valences[i]) + ", Importance:  " + str(importances[i]))
-        i += 1
-
 memories = utils.combine_topic_memories(messages, topics, valences, importances)
 
 
@@ -146,6 +136,11 @@ for activity in activities:
     for question in activities[activity]["questions"]:
         messages = utils.make_system_prompt(persona, prompts, messages, personality, summary, activity)
         maker.talkturn(question)
+
+reflections = prompts["intention_setting_activities"]["overall_assessment/reflection"]["questions"]
+for question in reflections:
+    messages = utils.make_system_prompt(persona, prompts, messages, personality, summary, activity)
+    maker.talkturn(question)
 
 qa = "\n".join([("Q: " if m["role"] == "user" else "A: ") + m["content"] for m in messages[1:]])
 system_prompt = utils.parse(

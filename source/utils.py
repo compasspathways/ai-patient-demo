@@ -77,15 +77,11 @@ def parse(string, subs=None, pattern=r"\{([^}]+)\}"):
 
 
 def xml(message: str, tag: str):
-    return f"""
-        <{tag.upper()}>
-        {message}
-        </{tag.upper()}>
-    """
+    return f"<{tag.upper()}>{message}</{tag.upper()}>"
 
 
-def get_prompts():
-    prompts_path = get_root_dir() / "prompts" / "prompts.yaml"
+def get_prompts(file_name: str):
+    prompts_path = get_root_dir() / "prompts" / f"{file_name}.yaml"
     with open(prompts_path, "r") as file:
         prompts = yaml.safe_load(file)
     return prompts
@@ -123,14 +119,6 @@ def hlin3(start, stop, num):
     return hexes
 
 
-def get_skin_colors(top=("fce5b8", "f7d088"), bottom=("b3a789", "0d0800"), num=20):
-    tops = hlin3(*top, num)
-    bottoms = hlin3(*bottom, num)
-    grid = list(zip(*[hlin3(t, b, num) for t, b in zip(tops, bottoms)]))
-    skin_colors = ["#" + item for sublist in grid for item in sublist]
-    return skin_colors
-
-
 def make_system_prompt(persona: dict, prompts: dict, messages, personality, summary, activity=None):
     qa = "\n".join([f'Q: {m["type"]}; A: {m["content"]}' for m in persona["memories"]])
     system_prompt = parse(
@@ -152,7 +140,6 @@ def make_system_prompt(persona: dict, prompts: dict, messages, personality, summ
 
 
 def get_importance(input: str, classifier, noise_mean=0, noise_sd=0):
-
     importance_strings = [
         "psychologically clinically important",
         "psychologically clinically critical",
@@ -171,10 +158,12 @@ def get_importance(input: str, classifier, noise_mean=0, noise_sd=0):
 
 def biographer(maker, importance_likert, prompts):
     contents = [f'{prompts["ask_question"]}\n\n{prompts["question_importance"][importance_likert]}'] + [
-        m["content"] for m in maker.messages[1:]
+        message["content"] for message in maker.messages[1:]
     ]
-    roles = ["system"] + ["user" if m["role"] == "assistant" else "assistant" for m in maker.messages[1:]]
-    return [{"role": r, "content": c} for r, c in zip(roles, contents)]
+    roles = ["system"] + [
+        "user" if message["role"] == "assistant" else "assistant" for message in maker.messages[1:]
+    ]
+    return [{"role": role, "content": content} for role, content in zip(roles, contents)]
 
 
 def combine_topic_memories(messages, topics, valences, importances):
@@ -197,3 +186,11 @@ def combine_topic_memories(messages, topics, valences, importances):
     ]
 
     return memories
+
+
+def get_skin_colors(top=("fce5b8", "f7d088"), bottom=("b3a789", "0d0800"), num=20):
+    tops = hlin3(*top, num)
+    bottoms = hlin3(*bottom, num)
+    grid = list(zip(*[hlin3(t, b, num) for t, b in zip(tops, bottoms)]))
+    skin_colors = ["#" + item for sublist in grid for item in sublist]
+    return skin_colors
