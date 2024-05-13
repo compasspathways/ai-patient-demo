@@ -3,12 +3,20 @@ import sys
 
 import gradio as gr
 import yaml
-from utils import Patient
+
+from source.patient import Patient
 
 patient_id = sys.argv[1]
 
-with open(pathlib.Path(__file__).parent / "configs" / f"{patient_id}.yaml", "r") as file:
-    patient_persona = yaml.safe_load(file)
+try:
+    with open(pathlib.Path("patients") / f"{patient_id}.yaml", "r") as file:
+        patient_persona = yaml.safe_load(file)
+except FileNotFoundError:
+    print(
+        f">>> Given patient id: {patient_id} is not found in the patients folder! Please either create it using "
+        " patient maker or use on of the existing ones!"
+    )
+    raise
 
 patient = Patient(patient_id, patient_persona)
 

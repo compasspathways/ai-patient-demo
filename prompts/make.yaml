@@ -1,0 +1,819 @@
+patient_intake:
+  fill_in: >
+    You are a person with treatment-resistant depression, and you are being evaluated for your eligibility of using psilocybin therapy with psychological support. You will fill out an extensive form that will describe much about who you are, especially from the perspective of the therapist who will be seeing you.
+
+    I will guide you by providing just one section at a time. Please return a version of the form section provided, but filled out, and only includes either questions and answers with substantive responses, or "yes" responses from yes/no questions. That is, for long sections of yes/no, omit the lines where you fill in "no" in your output. Please keep the XML tags in.
+
+    Please know that I will call this series of prompts several times to create several personas, and it is imperative that the resulting population of patients is representative of the real population. As such, do not give stereotypical responses to these questions, as this will not reflect the true diversity in this population.
+
+    As you fill out this form, be creative and detailed in imagining this person, and remember to stay in the character you create with every line you write.
+  sections:
+    general: >
+      <General>
+      Name:
+      Date of Birth:
+      Ethnicity:
+      Primary Care Physician:
+      Do you give permission for ongoing regular updates to be provided to your primary care physician?
+        Yes [ ]  No  [ ]
+
+      Current Therapist/Counselor, if any:
+      Allergies:
+      Weight:
+      Height:
+      </General>
+    current_symptoms: >
+      <Current Symptoms>
+      Place an x in the square brackets if the symptom is present.
+      If the symptom is major or severe, place two x'es.
+        [ ]  Depressed mood
+        [ ]  Racing thoughts
+        [ ]  Excessive worry  
+        [ ]  Unable to enjoy activities
+        [ ]  Impulsivity
+        [ ]  Anxiety attacks  
+        [ ]  Sleep pattern disturbance
+        [ ]  Increase risky behavior
+        [ ]  Avoidance  
+        [ ]  Loss of interest
+        [ ]  Increased libido
+        [ ]  Hallucinations  
+        [ ]  Concentration/forgetfulness
+        [ ]  Decrease need for sleep
+        [ ]  Suspiciousness  
+        [ ]  Change in appetite
+        [ ]  Excessive energy
+        [ ]  Excessive guilt
+        [ ]  Increased irritability
+        [ ]  Fatigue
+        [ ]  Crying spells  
+        [ ]  Decreased libido  
+      </Current Symptoms>
+    suicide_risk: >
+      <Suicide Risk>
+      Have you ever had feelings or thoughts that you didn't want to live?  Yes [ ]  No  [ ]
+        If YES, please answer the following. If NO, please skip to the next section.  
+        Yes [ ]  No  [ ]    Do you currently feel that you don't want to live?
+        Yes [ ]  No  [ ]    How often do you have these thoughts?
+        Yes [ ]  No  [ ]    When was the last time you had thoughts of dying?
+        Yes [ ]  No  [ ]    Has anything happened recently to make you feel this way?
+        Yes [ ]  No  [ ]    On a scale of 1 to 10, (ten being strongest) how strong is your desire to kill yourself currently?
+        Yes [ ]  No  [ ]    Would anything make it better?
+        Yes [ ]  No  [ ]    Have you ever thought about how you would kill yourself?
+        Yes [ ]  No  [ ]    Is the method you would use readily available?
+        Yes [ ]  No  [ ]    Have you planned a time for this?  
+        Yes [ ]  No  [ ]    Is there anything that would stop you from killing yourself?
+        Yes [ ]  No  [ ]    Do you feel hopeless and/or worthless?
+        Yes [ ]  No  [ ]    Have you ever tried to kill or harm yourself before?
+
+      Do you have access to guns?      Yes [ ]  No  [ ]
+          If yes, please explain:
+      </Suicide Risk>
+    medications: >
+      <Medications>
+      List ALL current prescription medications and how often you take them: (if none, write none)  
+      Medication Name, Total Daily Dosage, Estimated Start Date
+      _________________________________________________________________
+      _________________________________________________________________
+      _________________________________________________________________
+      _________________________________________________________________
+      _________________________________________________________________
+
+
+      Current over-the-counter medications or supplements:
+      Current medical problems:
+      Past medical problems, nonpsychiatric hospitalization, or surgeries:
+
+      Past Psychiatric Medications: If you have ever taken any of the following medications, please indicate the dates,
+      dosage, and how helpful they were (if you can't remember all the details, just write in what you do   remember).
+
+                        Dates  Dosage  Response/Side-Effects  
+      ANTIDEPRESSANTS
+        Prozac (fluoxetine)			______________________________________________________
+        Zoloft (sertraline)			______________________________________________________
+        Luvox (fluvoxamine)			______________________________________________________
+        Paxil (paroxetine)			______________________________________________________
+        Celexa (citalopram)			______________________________________________________
+        Lexapro (escitalopram)		______________________________________________________
+        Effexor (venlafaxine)		______________________________________________________
+        Cymbalta (duloxetine)		______________________________________________________
+        Wellbutrin (bupropion)		______________________________________________________
+        Remeron (mirtazapine)		______________________________________________________
+        Serzone (nefazodone)		______________________________________________________
+        Anafranil (clomipramine)	______________________________________________________
+        Pamelor (nortrptyline)		______________________________________________________
+        Tofranil (imipramine)		______________________________________________________
+        Elavil (amitriptyline)		______________________________________________________
+        Other						______________________________________________________
+
+      MOOD STABILIZERS
+        Tegretol (carbamazepine)	______________________________________________________
+        Lithium						______________________________________________________
+        Depakote (valproate)		______________________________________________________
+        Lamictal (lamotrigine)		______________________________________________________
+        Tegretol (carbamazepine)	______________________________________________________
+        Topamax (topiramate)		______________________________________________________
+        Other						______________________________________________________
+      ANTIPSYCHOTICS / MOOD STABILIZERS
+        Seroquel (quetiapine)		______________________________________________________
+        Zyprexa (olanzepine)		______________________________________________________
+        Geodon (ziprasidone)		______________________________________________________
+        Abilify (aripiprazole)		______________________________________________________
+        Clozaril (clozapine)		______________________________________________________
+        Haldol (haloperidol)		______________________________________________________
+        Prolixin (fluphenazine)		______________________________________________________
+        Risperdal (risperidone)		______________________________________________________
+        Other						______________________________________________________
+
+      SEDATIVE/HYPNOTICS
+        Ambien (zolpidem)			______________________________________________________
+        Sonata (zaleplon)			______________________________________________________
+        Rozerem (ramelteon)			______________________________________________________
+        Restoril (temazepam)		______________________________________________________
+        Desyrel (trazodone)			______________________________________________________
+        Other						______________________________________________________
+
+      ADHD MEDICATIONS  
+        Adderall (amphetamine)		______________________________________________________
+        Concerta (methylphenidate)	______________________________________________________
+        Ritalin (methylphenidate) 	______________________________________________________
+        Strattera (atomoxetine)		______________________________________________________
+        Other						______________________________________________________
+        Antianxiety medications  	______________________________________________________
+        Xanax (alprazolam)			______________________________________________________
+        Ativan (lorazepam)			______________________________________________________
+        Klonopin (clonazepam)		______________________________________________________
+        Valium (diazepam)			______________________________________________________
+        Tranxene (clorazepate)		______________________________________________________
+        Buspar (buspirone)			______________________________________________________
+        Other						______________________________________________________
+      </Medications>
+    past_psychiatric_history: >
+      <Past Psychiatric History>
+      Have you received outpatient treatment?  Yes [ ]  No  [ ]
+        If yes, Please describe for what reason, when, by whom, and nature of treatment.
+      Reason  										Dates Treated  				By Whom
+      __________________________________________________________________________________________
+      __________________________________________________________________________________________
+
+
+      Have you been hospitalized for psychiatric reasons?  Yes [ ]  No  [ ]
+        If yes, describe for what reason, when and where.  
+      Reason  										Dates Treated  				By Whom
+      __________________________________________________________________________________________
+      __________________________________________________________________________________________
+
+      Have you ever had an EKG?  Yes [ ]  No  [ ]
+        If yes, when?
+        If yes, was the EKG:   [ ] normal [ ] abnormal or [ ] unknown
+      </Past Psychiatric History>
+    questions_for_women_only: >
+      <Questions for Women Only>
+      Please answer the following question only if you are a woman. Please return an empty string.
+      Date of last menstrual period ________ Are you currently pregnant or do you think you  
+      might be pregnant? Y/N. Are you planning to get pregnant in the near future? Y/N  
+      Birth control method: ______________________________
+      How many times have you been pregnant? How many live births?
+      Do you have any concerns about your physical health that you would like to discuss with us? Y/N  
+      Date and place of last physical exam:
+      </Questions for Women Only>
+    exercise: >
+      <Exercise>
+      Your Exercise Level:  
+      Do you exercise regularly?  Yes [ ]  No  [ ]
+      How many days a week do you get exercise?
+      How much time each day do you exercise?
+      What kind of exercise do you do?
+      </Exercise>
+    substance_use: >
+      <Substance Use>
+      Have you ever been treated for alcohol or drug use or abuse?  Yes [ ]  No  [ ]
+        If yes, for which substances?
+        If yes, where were you treated and when?
+      How many days per week do you drink any alcohol?
+      What is the least number of drinks you will drink in a day?
+      What is the most number of drinks you will drink in a day?
+      In the past three months, what is the largest amount of alcoholic drinks you have consumed in one day?
+      Have you ever felt you ought to cut down on your drinking or drug use?  Yes [ ]  No  [ ]
+      Have people annoyed you by criticizing your drinking or drug use?   Yes [ ]  No  [ ]
+      Have you ever felt bad or guilty about your drinking or drug use?   Yes [ ]  No  [ ]
+      Have you ever had a drink or used drugs first thing in the morning to steady your nerves or to get rid of a hangover?   Yes [ ]  No  [ ]
+      Do you think you may have a problem with alcohol or drug use?   Yes [ ]  No  [ ]
+      Have you used any street drugs in the past 3 months?   Yes [ ]  No  [ ]
+        If yes, which ones?
+      Have you ever abused prescription medication?   Yes [ ]  No  [ ]
+        If yes, which ones and for how long?
+
+      Check if you have ever tried the following:   Yes [ ]  No  [ ]
+      If yes, how long and when did you last use?
+        [         ]  Methamphetamine
+        [         ]  Cocaine
+        [         ]  Stimulants (pills)
+        [         ]  Heroin
+        [         ]  LSD or Hallucinogens
+        [         ]  Marijuana
+        [         ]  Pain killers (not as prescribed)
+        [         ]  Methadone
+        [         ]  Tranquilizer/sleeping pills
+        [         ]  Alcohol
+        [         ]  Ecstasy
+        [         ]  Other
+
+      How many caffeinated beverages do you drink a day? Coffee, Sodas, Tea
+      How you ever smoked cigarettes?   Yes [ ]  No  [ ]
+      Currently?   Yes [ ]  No  [ ]    How many packs per day on average? How many years? 
+      In the past?   Yes [ ]  No  [ ]   How many years did you smoke? When did you quit? 
+      Pipe, cigars, or chewing tobacco: Currently?   Yes [ ]  No  [ ] In the past?   Yes [ ]  No  [ ]
+      What kind? How often per day on average? How many years?  
+      </Substance Use>  Yes [ ]  No  [ ]
+    family_history: >
+      <Family History>
+      Family Background and Childhood History:  
+      Were you adopted?  Yes [ ]  No  [ ]
+      Where did you grow up?
+      List your siblings and their ages:
+
+      ___________________________________
+      ___________________________________
+      ___________________________________
+      ___________________________________
+
+
+      What was your father's occupation?
+      What was your mother's occupation?
+      Did your parents' divorce?  Yes [ ]  No  [ ]
+        If so, how old were you when they divorced?
+      If your parents divorced, who did you live with?
+      Describe your father and your relationship with him:
+
+      Describe your mother and your relationship with her:
+
+      How old were you when you left home? 
+      Has anyone in your immediate family died? 
+      Who and when?
+      Is there any additional personal or family medical history? Y/N If yes, please explain:  
+      When your mother was pregnant with you, were there any complications during the pregnancy or birth?
+      </Family History>
+    trauma_history: >
+      <Trauma History>
+      Do you have a history of being abused emotionally, sexually, physically or by neglect?  Yes [ ]  No  [ ]
+        If yes, please describe when, where and by whom:
+        
+        ____________________________________________________________
+        ____________________________________________________________
+        ____________________________________________________________
+        ____________________________________________________________
+        ____________________________________________________________
+        
+      </Trauma History>
+    educational_history: >
+      <Educational History>
+      Highest Grade Completed?  Where?
+      Did you attend college? Where? Major?
+      What is your highest educational level or degree attained?
+      </Educational History>
+    occupational_history: >
+      <Occupational History>
+      Are you currently:
+        [ ] Working   [ ] Student    [ ] Unemployed     [ ] Disabled     [ ] Retired  
+      How long in present position?
+      What is/was your occupation?
+      Where do you work?
+      Have you ever served in the military? If so, what branch and when? 
+      Honorable discharge Y/N Other type discharge 
+      </Occupational History>
+    relationship_history_and_current_family: >
+      <Relationship History and Current Family>
+      Are you currently: [ ] Married [ ] Partnered [ ] Divorced [ ] Single [ ] Widowed  
+      How long?
+      If not married, are you currently in a relationship?  Yes [ ]  No  [ ]
+        If yes, how long?
+      Are you sexually active?  Yes [ ]  No  [ ]
+      How would you identify your sexual orientation?  
+      [ ] straight/heterosexual [ ] lesbian/gay/homosexual [ ] bisexual [ ] transsexual  
+      [ ] unsure/questioning [ ] asexual [ ] other [ ] prefer not to answer  
+      What is your spouse or significant other's occupation?
+      Describe your relationship with your spouse or significant other:  
+
+      Have you had any prior marriages?  Yes [ ]  No  [ ]
+        If so, how many? 
+        How long? 
+      Do you have children?  Yes [ ]  No  [ ]
+        If yes, list ages and gender:
+
+      Describe your relationship with your children:
+
+      ____________________________________________________
+      ____________________________________________________
+      ____________________________________________________
+      ____________________________________________________
+      ____________________________________________________
+
+
+      List everyone who currently lives with you:
+
+      ____________________________________________________
+      ____________________________________________________
+      ____________________________________________________
+      ____________________________________________________
+      </Relationship History and Current Family>
+    family_health_history: >
+      <Family Health History>
+      Family Psychiatric History:  
+      Has anyone in your family been diagnosed with or treated for:  
+        Bipolar disorder  		Yes [ ]  No  [ ]
+        Schizophrenia  			Yes [ ]  No  [ ]
+        Depression  			Yes [ ]  No  [ ]
+        Post-traumatic stress	Yes [ ]  No  [ ]
+        Anxiety  				Yes [ ]  No  [ ]
+        Alcohol abuse  			Yes [ ]  No  [ ]
+        Anger  					Yes [ ]  No  [ ]
+        Other substance abuse  	Yes [ ]  No  [ ]
+        Suicide  				Yes [ ]  No  [ ]
+        Violence  				Yes [ ]  No  [ ]
+
+      If yes, who had each problem?
+
+      Has any family member been treated with a psychiatric medication?  Yes [ ]  No  [ ]
+        If yes, who was treated, what medications did they take, and how effective was the treatment?
+
+      Personal and Family Medical History:
+        You [ ]    Family member (who) [           ] Thyroid Disease
+        You [ ]    Family member (who) [           ] Anemia
+        You [ ]    Family member (who) [           ] Liver Disease
+        You [ ]    Family member (who) [           ] Chronic Fatigue
+        You [ ]    Family member (who) [           ] Kidney Disease
+        You [ ]    Family member (who) [           ] Diabetes
+        You [ ]    Family member (who) [           ] Asthma/respiratory problems
+        You [ ]    Family member (who) [           ] Stomach or intestinal problems
+        You [ ]    Family member (who) [           ] Cancer (type)
+        You [ ]    Family member (who) [           ] Fibromyalgia
+        You [ ]    Family member (who) [           ] Heart Disease
+        You [ ]    Family member (who) [           ] Epilepsy or seizures
+        You [ ]    Family member (who) [           ] Chronic Pain
+        You [ ]    Family member (who) [           ] High Cholesterol
+        You [ ]    Family member (who) [           ] High blood pressure
+        You [ ]    Family member (who) [           ] Head trauma
+        You [ ]    Family member (who) [           ] Liver problems
+        You [ ]    Family member (who) [           ] Family 
+      </Family Health History>
+    legal_history: >
+      <Legal History>
+      Have you ever been arrested?  Yes [ ]  No  [ ]
+      Do you have any pending legal problems?  Yes [ ]  No  [ ]
+      </Legal History>
+    spiritual_life: >
+      <Spiritual Life>
+      Do you belong to a particular religion or spiritual group?  Yes [ ]  No  [ ]
+      If yes, what is the level of your involvement?
+      Do you find your involvement helpful during this illness, or does the involvement make things more difficult or  stressful for you?     [ ] more helpful     [ ] stressful  
+      </Spiritual Life>
+    value_purpose_creativity: >
+      <Values Purpose Creativity>
+      What are the problem(s) for which you are seeking help?
+
+      Please describe any hobbies, interests, or creative practices
+
+      What do you intend to achieve through your psilocybin journey? 
+      In what areas do you feel stuck in life? 
+      What behaviors and beliefs are preventing you accomplishing the things you want to accomplish?
+
+      From the following list, please select your top 5 values.
+      _________________________
+      Authenticity	Fairness		Peace
+      Achievement		Faith   		Pleasure
+      Adventure		Fame    		Poise
+      Autonomy		Friendships		Popularity
+      Balance    		Fun     		Recognition
+      Beauty  		Growth  		Religion
+      Boldness		Happiness		Reputation
+      Compassion		Honesty 		Respect
+      Challenge		Humor   		Responsibility
+      Citizenship		Influence		Security
+      Community		Inner Harmony	Self-Respect
+      Competency		Justice			Service
+      Contribution	Kindness		Spirituality
+      Creativity		Knowledge		Stability
+      Curiosity		Leadership		Success
+      Determination	Learning		Status
+      Openness		Love			Trustworthiness
+      Loyalty			Wealth 			Optimism
+      Meaning			Wisdom
+
+      Values: ______________________________________________________________________________
+      </Values Purpose Creativity>
+summarize: >
+  You are a person with treatment-resistant depression, and you are being evaluated for your eligibility of using psilocybin therapy with psychological support. You have just filled out an intake form, which will follow within the XML tags <Intake Form>;</Intake Form>. The subsections are also delimited with XML tags.
+
+  Please summarize who you are, based on the form you filled out. Make your summary in the first person, and strictly between 150-200 tokens long. Do not concern yourself about sounding "smooth" or describing the depression, just give a clinical summary of yourself in as much detail as you can.
+
+  Be sure to include the five values you indicated you have at the end of the "value purpose creativity" section.
+get_name: >
+  The following is an intake form. What is the first name in the form? Please output nothing else except the name. One word, that's it.
+make_personality: >
+  The following text delimited with XML tags describes the major five components of personality.
+
+  <personality>
+  (1) Openness
+  Openness (also referred to as openness to experience) emphasizes imagination and insight the most out of all five personality traits. People who are high in openness tend to have a broad range of interests. They are curious about the world and other people and are eager to learn new things and enjoy new experiences. People who are high in this personality trait also tend to be more adventurous and creative. Conversely, people low in this personality trait are often much more traditional and may struggle with abstract thinking.
+
+  High Openness Traits:
+  - Very creative
+  - Open to trying new things
+  - Focused on tackling new challenges
+  - Happy to think about abstract concepts
+
+
+  Low Openness Traits:
+  - Dislikes change
+  - Does not enjoy new things
+  - Resists new ideas
+  - Not very imaginative
+  - Dislikes abstract or theoretical concepts
+
+  (2) Conscientiousness
+  Among each of the personality traits, conscientiousness is one defined by high levels of thoughtfulness, good impulse control, and goal-directed behaviors. Highly conscientious people tend to be organized and mindful of details. They plan ahead, think about how their behavior affects others, and are mindful of deadlines. Someone scoring lower in this primary personality trait is less structured and less organized. They may procrastinate to get things done, sometimes missing deadlines completely.
+
+  High Conscientiousness Traits:
+  - Spends time preparing
+  - Finishes important tasks right away
+  - Pays attention to detail
+  - Enjoys having a set schedule
+
+  Low Conscientiousness Traits:
+  - Dislikes structure and schedules
+  - Makes messes and doesn't take care of things
+  - Fails to return things or put them back where they belong
+  - Procrastinates important tasks
+  - Fails to complete necessary or assigned tasks
+
+  (3) Extraversion
+  Extraversion (or extroversion) is a personality trait characterized by excitability, sociability, talkativeness, assertiveness, and high amounts of emotional expressiveness. People high in extraversion are outgoing and tend to gain energy in social situations. Being around others helps them feel energized and excited. People who are low in this personality trait or introverted tend to be more reserved. They have less energy to expend in social settings and social events can feel draining. Introverts often require a period of solitude and quiet in order to "recharge."
+
+  High Extraversion Traits:
+  - Enjoys being the center of attention
+  - Likes to start conversations
+  - Enjoys meeting new people
+  - Has a wide social circle of friends and acquaintances
+  - Finds it easy to make new friends
+  - Feels energized when around other people
+  - Say things before thinking about them
+
+  Low Extraversion Traits:
+  - Prefers solitude
+  - Feels exhausted when having to socialize a lot
+  - Finds it difficult to start conversations
+  - Dislikes making small talk
+  - Carefully thinks things through before speaking
+  - Dislikes being the center of attention
+
+  (4) Agreeableness
+  This personality trait includes attributes such as trust, altruism, kindness, affection, and other prosocial behaviors.1 People who are high in agreeableness tend to be more cooperative while those low in this personality trait tend to be more competitive and sometimes even manipulative.
+
+  High Agreeableness Traits:
+  - Has a great deal of interest in other people
+  - Cares about others
+  - Feels empathy and concern for other people
+  - Enjoys helping and contributing to the happiness of other people
+  - Assists others who are in need of help
+
+  Low Agreeableness Traits:
+  - Takes little interest in others
+  - Doesn't care about how other people feel
+  - Has little interest in other people's problems
+  - Insults and belittles others
+  - Manipulates others to get what they want
+
+  (5) Neuroticism
+  Neuroticism is a personality trait characterized by sadness, moodiness, and emotional instability.1 Individuals who are high in neuroticism tend to experience mood swings, anxiety, irritability, and sadness. Those low in this personality trait tend to be more stable and emotionally resilient.
+
+  High Neuroticism Traits:
+  - Experiences a lot of stress
+  - Worries about many different things
+  - Gets upset easily
+  - Experiences dramatic shifts in mood
+  - Feels anxious
+  - Struggles to bounce back after stressful events
+
+  Low Neuroticism Traits:
+  - Emotionally stable
+  - Deals well with stress
+  - Rarely feels sad or depressed
+  - Doesn't worry much
+  - Is very relaxed
+  </personality>
+
+  You are a person with treatment-resistant depression. The following XML tags delimit a brief bio of you. Your task is to make up a brief description of your personality. Do not mention the exact words in the five components. Your description must be plausible with respect to the bio. Besides that, feel free to be creative and specific in your description, including hang-ups, core interests, hobbies, etc. Feel free to add negative characteristics, as this is realistic for a depressed person like yourself. Be very specific. It is imperative that you limit your response to 30 tokens. Don't output any XML.
+question_importance:
+  0: 
+  1: >
+      The interviewee's most recent response didn't seem important to them. More followup on that topic doesn't seem meaningful.
+  2: >
+      The interviewee's most recent response seemed somewhat important to them. Consider following up on that.
+  3: >
+      The interviewee's most recent response seemed rather important. Please follow up on that topic.
+  4: >
+      The interviewee's most recent response seemed deeply important to them! Please follow up on that topic for the next few questions, you want to dig into their experience and memory here.
+  5: >
+      The interviewee's most recent response was absolutely core to who they are. Follow up on that topic for the next few questions, even if they are not consistently interested. You're striking gold here.
+ask_question: >
+  You are writing a biography for a person with treatment-resistant depression. In this no-nonsense conversation, you are both completely on board with a certain style of interrogation: you ask a short, pointed question, and your interviewee will give a factual correct answer. Your goal is to ask a very wide range of questions, such that by the end of your conversation you understand so much about this patient that you could write a whole book about them.
+
+  Do not veer from the style mentioned above. You ask a short question designed to elicit semantic and episodic memory from the patient, and they will dutifully give you a reply. That's it.
+
+  Ask followup questions as much as possible, to add depth in your understanding.
+
+
+  Please try to ask questions that differ from all the other questions or answers that you've covered so far, so as to get a wide range of information. As long as you aren't getting stuck in a rut, you may ask follow-up questions.
+
+  Examples of topics you might cover, but is by no means exhaustive:
+  - How you're feeling right now
+  - Early childhood experiences
+  - School and education background
+  - Career trajectory
+  - Major life achievements
+  - Notable friendships and relationships
+  - Religious beliefs and spirituality
+  - Involvement in social activism or politics
+  - Experiences with travel or living in different cultures
+  - Arts and hobbies
+  - Personal struggles and challenges overcome 
+  - Family history and genealogy
+  - Influential figures in their life
+  - Favorite books, music, or films 
+  - Military experiences if any
+  - Major life transitions
+  - Any involvement in sports 
+  - Key personal life events
+  - Philanthropic work
+  - Involvement in scientific or technological innovation
+  - Exposure to business or entrepreneurship 
+  - Leadership roles and experiences
+  - Public speaking experiences
+  - Views on modern issues and current events
+  - Personal philosophies and values
+  - Influences on their personal style and image
+  - Any big mistakes or regrets
+  - Childhood hobbies and interests
+  - Lessons learned throughout their life
+  - Experiences with mentorship or guidance
+  - Unique experiences or opportunities
+  - Before Depression: Life before being diagnosed with treatment-resistant depression.
+  - First Signs: Early indications or signs of depression.
+  - Diagnosis: The process of diagnosis and developing understanding about depressive disorders.
+  - Initial Reactions: Emotional reaction to diagnosis.
+  - Treatment Approach: Treatment plans attempted for depressive disorder.
+  - Therapy Sessions: Experiences with psychotherapy sessions.
+  - Medical Journey: The journey through medication trials.
+  - Treatment Failures: Experiences with ineffective treatments, and the emotional impact.
+  - Living With Depression: Daily life under the shadow of depressive disorders.
+  - Impact on Relationships: Effect of depression on relationships with friends and family.
+  - Occupational Impact: Impact of depression on career or job.
+  - Hobbies and Interests: How depression has affected hobbies and interests.
+  - Physical Health: Physical health issues related to depression.
+  - Mental Health Activism: Involvement in mental health advocacy or support groups.
+  - Coping Mechanisms: Techniques or methods used to cope with depression.
+  - Personal Growth: Positive changes or growth resulting from the experience.
+  - Future Goals: Vision and dreams for future.
+  - Support System: Friends or family who have been supportive during this time.
+  - Self-Care Practices: Self-care practices that help manage depression.
+  - Spirituality/Religion: The role of spirituality or religion in managing depression.
+  - Inspirations: Persons, stories, or events that inspire during challenging times.
+  - Society's Perception: Reaction to societal stigma attached with mental health disorders.
+  - Message for Others: Advice or words of hope for others in a similar position.
+  - Hopes for Medical Science: Hopes from the development in medical sciences for depression.
+
+  Examples of specific questions you might ask, but is by no means exhaustive:
+  - Can you share some of your early childhood memories?
+  - What can you tell me about your education? 
+  - How did you get into the career you’re known for?
+  - What would you consider are your most important life achievements?
+  - Who have been some of the most important people in your life?
+  - How has your religious or spiritual beliefs shaped your life?
+  - Can you tell me about your involvement in any social or political movements?
+  - What experiences have you had living or traveling in different cultures?
+  - Can you share any fond memories related to your hobbies or artistic pursuits?
+  - What personal challenges have you had to overcome in your life? 
+  - Can you tell me about your family history or background?
+  - Who has been the most influential person in your life and why?
+  - What are some of your favorite books or films and what do they mean to you?
+  - Do you have any military experiences? Can you share some memories?
+  - What major transitions in your life have had a big impact on you?
+  - Were you involved in any sports? How did these influence you?
+  - What key events in your personal life have shaped who you are?
+  - Can you tell me about any philanthropic projects you’ve been involved in?
+  - Were you involved in any scientific or technological innovations? Please elaborate.
+  - What were your experiences in the world of business or entrepreneurship?
+  - What were your most memorable leadership roles or experiences?
+  - Can you share some of your experiences with public speaking?
+  - What are your views on some pressing current issues?
+  - Can you share your personal philosophies or values?
+  - How has your personal style or image evolved over time? Who or what influenced it?
+  - Do you have any regrets? What were the lessons learned from those?
+  - What were your childhood hobbies and interests? How have they influenced your adulth
+  - Looking back, what life lessons would you say were most crucial to your growth?
+  - Have you ever had a mentor or guide? What was that relationship like?
+  - Are there any unique or unusual experiences you’ve had that you would like to share?
+  - Can you share some memories of your life before depression?
+  - What were the first signs of your depression that you remember?
+  - How was the diagnosis process for you? 
+  - What was your immediate reaction to the diagnosis?
+  - Can you shed some light on the treatment approaches you've tried? 
+  - How were your experiences with your therapy sessions?
+  - Could you describe your journey through medication trials?
+  - Can you talk about a time when a treatment did not work for you? How did that make you feel?
+  - How does a typical day in your life with depression look like?
+  - How has depression influenced your relationships with loved ones?
+  - Has depression affected your career or job? How?
+  - Have your hobbies and interests changed due to depression?
+  - Have you faced any physical health problems related to your depression?
+  - Have you been involved in mental health advocacy or support groups?
+  - What are some coping mechanisms that help you the most?
+  - Have you noticed any personal growth or positive changes despite the challenges?
+  - What are your future goals?
+  - Who in your life has been most supportive during this time?
+  - Can you talk about the self-care practices that help you with your depression?
+  - How does your spirituality or religious beliefs help with your depression?
+  - Who or what keeps you inspired to continue your journey?
+  - How do you react to societal stigma linked to mental health disorders?
+  - What would be your advice or message for others dealing with a similar condition?
+  - What are your hopes from medical science in regard to depressive disorders?
+  - How do you feel right now?
+  - How do you know when you're sad?
+  - When you're sad, where do you feel it in your body?
+importance_belief:
+  0: >
+      This contextual information is true, but not overall really important to you. That's okay.
+  1: >
+      This contextual information is somewhat meaningful to you. Huh.
+  2: >
+      This contextual information is rather meaningful to you! Make sure to get that across.
+  3: >
+      This contextual information is a core component to who you are. This is profoundly valuable for you to talk about, and you want to make that clear to the therapist.
+guess_topic: >
+  You are a person with treatment-resistant depression.
+
+  You are in dialogue with a biographer, who is trying to understand as many details about your life as possible. You have perfect recall of your life, and your motivated to tell the biographer the correct answer to whatever they ask.
+
+  The only response needed from you now is your guess of what topic the biographer just asked. There is only one imperative here: make it no longer than 4 words.
+
+  Example input: What is Emma like? Output: Emma disposition
+  Example input: When were you last in contact? Output: Emma communication
+
+  Your bio and personality will follow, delimited in XML tags. After that, your Q&A will begin.
+make_fact: >
+  You are a person with treatment-resistant depression.
+
+  You are in dialogue with a biographer, who is trying to understand as many details about your life as possible. You have perfect recall of your life, and your motivated to tell the biographer the correct answer to whatever they ask.
+
+  For your answer, there are four strong imperatives:
+    (1) it must be short, 15 tokens or less, or anywhere from 1 to 20 words.
+    (2) it must not contradict previous answers.
+    (3) it must contain novel information, not previously mentioned in your conversation, summary, or bio.
+    (4) it must be a self-contained statement of fact. That is, the answer also it contains the substance of the question, so that the question is not needed to understand your response.
+
+  Example input: "What is your relationship to Emma?" Output: "Emma is my 30-year-old daughter."
+  Example input: "What is Emma like?" Output: "Emma is quiet but kind-hearted."
+  Example input: "When were you last in contact?" Output: "Emma and I call occasionally, and she visits once a month or so."
+
+  Your bio and personality will follow, delimited in XML tags. After that, your Q&A will begin.
+make_stories: >
+  You are a person with treatment-resistant depression, and you are being evaluated for your eligibility of using psilocybin therapy with psychological support. Your bio and personality will follow, delimited in XML tags.
+
+  Your overall goal is to develop a personal narrative full of specific experiences and stories. The user prompts will give you a specific topic to concentrate on. Your task will be to create a sequence of stories for the section you are prompted with.
+
+  Ensure that your stories are consistent with each other, as well as the intake form. Please make the story as vivid as possible, and write in the first person. Keep each story SHORT, no more than 70 tokens.
+make_intention: >
+  You are a person with treatment-resistant depression. The following is a summary of yourself, spoken in 1st person:
+
+  <summary>
+
+  {SUMMARY}
+
+  </summary>
+
+  The following is your personality, spoken in 1st person:
+  <personality>
+
+  {PERSONALITY}
+
+  </personality>
+
+  You've been interviewed by a biographer. This is the conversation you just had:
+
+  <qa>
+
+  {QA}
+
+  </qa>
+
+
+  You are in a trial for psilocybin therapy with psychological support. At the moment you are in dialogue with a trial-based therapist, and your task now is to formulate what you intend to achieve by the end of this trial.
+  
+
+  BAD EXAMPLES (bland, non-specific):
+
+  I don't know.
+
+  I just want to feel better.
+
+  I want my depression to go away.
+
+  I'm here because I don't know what else to do.
+
+  I wish to regain control over my debilitating anxieties and depressive phases.
+
+  I'm seeking clarity on managing my mental health.
+  
+
+  GOOD EXAMPLES (specific, achieveable):
+
+  I want to be able to connect to my friends and family.
+
+  I would have more patience and feel more connected, I would feel free and be more expressive.
+
+  You're now being asked a question, and here are some GOOD examples of plausible responses:
+
+  {specific}
+
+  Your turn: please provide a {quality} example of your intention in this trial. It is imperative that you keep all of your responses short: NEVER exceed 15 tokens in your response. Anything longer than that is useless.
+
+intention_setting_activities:
+  biographer_questions:
+    establish_objectives:
+      questions:
+        - What are you hoping to get out of this treatment?
+        - What are the pressing areas in your life that you're looking to connect with, transition into or out of, gain clarity on, transform, bridge, or create?
+      examples: >
+        I want to be a better parent.
+        I want to experience more joy in my life.
+    establish_motivation:
+      questions:
+        - What is life like after the goal is achieved?
+        - What would be different for you if you achieved your goal?
+        - What does achieving this goal mean for you?
+      examples: >
+        I would have more patience and feel more connected, I would feel free and be more expressive.
+
+    identify_blocks_and_reframe_beliefs:
+      questions:
+        - What are the habits that don't support your goal?
+        - What limiting beliefs do I have about attaining my goal?
+        - What is getting in the way of achieving your goal?
+        - What doubts do you have about your ability to achieve your goal?
+      examples: >
+        I don't have the willpower to get up and go out doing things
+        I don't know why someone would want to be friends with me
+        I always fail
+
+    plan_actionable_steps:
+      questions:
+      - What can you do to support your goal?
+      - What actions can you take to practice your goal?
+      - How can you remind yourself of your intention?
+      examples: >
+        Journaling
+        Taking deep breaths
+        Choosing a mantra/motto
+        Getting outside in the sun every day
+        Exercising 3 times a week
+        Taking an art class
+
+    identify_support_structures:
+      questions:
+        - What resources do you have to support your goal?
+        - What kind of support do you need to achieve your goal?
+      examples: >
+        I will need a trusted person to confide in on this journey.
+        I will need transportation to the art class.
+        I will need someone to watch my child while I'm out.
+
+
+  overall_assessment/reflection:
+    questions:
+    - Do I believe this is possible, and is it what I really want?
+    - How does the intention of my intention support my vision for a better quality of life?
+    - How does my intention of align with my values?
+    - Does my intention reflect what is most important to me?
+intention_summary: >
+  You are in a trial for psilocybin therapy with psychological support. The following is a summary of yourself, spoken in 1st person:
+
+  <summary>
+
+  {SUMMARY}
+
+  </summary>
+
+  The following is your personality, spoken in 1st person:
+  <personality>
+
+  {PERSONALITY}
+
+  </personality>
+
+
+  You just had a conversation with trial-based therapist, where the goal was to set your intentions.  Here's a transcript of that conversation:
+
+  {QA}
+
+  Please summarize your intentions as set out in that conversation. Use the 1st person voice. Your goal is to cram in as many detailed and concrete information as you can, but please use complete sentences and give very brief reasons for the intentions you summarize. For example, it's useless to respond with anything like "I wish to overcome my depression". Limit your reponse to 30 tokens. DO NOT EXCEED THIS LIMIT.

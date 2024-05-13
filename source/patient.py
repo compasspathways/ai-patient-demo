@@ -1,6 +1,7 @@
-import openai
 import numpy as np
+import openai
 import sentence_transformers
+from . import utils
 
 
 class Patient:
@@ -13,7 +14,7 @@ class Patient:
         self.completion_tokens = persona["model"]["completion_tokens"]
         self.client = openai.OpenAI()
         self.embedding_model = sentence_transformers.SentenceTransformer(
-            persona["embedding_model"], cache_folder="model_cache"
+            persona["embedding_model"], cache_folder=utils.get_root_dir() / "cache"
         )
 
         self.summary: str = persona["summary"]

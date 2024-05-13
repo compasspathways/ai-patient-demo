@@ -1,0 +1,6 @@
+cache
+
+.env
+
+venv*
+*.ipynb
