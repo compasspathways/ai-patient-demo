@@ -40,7 +40,7 @@ description = (
 )
 print(patient_name)
 
-# %%
+# %% Memories
 messages = [
     {
         "role": "system",
@@ -86,7 +86,7 @@ print(">>> Finished!")
 memories = utils.combine_topic_memories(messages, topics, valences, importances)
 
 
-# %%
+# %% Avatar
 print(">>> Creating avatar for the patient ...")
 skin_colors = utils.get_skin_colors()
 skin_color = random.choice(skin_colors)
@@ -111,7 +111,7 @@ avatar = (
 )
 
 
-# %%
+# %% Saving
 print(">>> Saving patient persona ...")
 persona = {
     "id": patient_name.lower(),
