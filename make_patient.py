@@ -1,4 +1,4 @@
-# %%
+# %% Imports
 import random
 import string
 
@@ -9,7 +9,7 @@ import sentiment3d
 
 from source import patient_maker, utils
 
-# %%
+# %% Init
 dotenv.load_dotenv(override=True)
 maker = patient_maker.PatientMaker()
 prompts = utils.get_prompts("make")
@@ -18,7 +18,7 @@ s3d = sentiment3d.Sentiment3D()
 
 num_memories = 3
 
-# %%
+# %% Intake Form
 print(">>> Making Intake Form ...")
 maker.messages = [{"role": "system", "content": prompts["patient_intake"]["fill_in"]}]
 for section, content in prompts["patient_intake"]["sections"].items():
@@ -28,21 +28,19 @@ print(">>> done!")
 
 maker.print_messages()
 
-# %%
+# %% Basic fields
 intake_form = "\n".join([message["content"] for message in maker.messages if message["role"] == "assistant"])
 patient_name = maker.command(f'{prompts["get_name"]}\n{intake_form}')
 maker.write(intake_form, f"{patient_name}")
+summary = maker.command(prompts["summarize"] + utils.xml(intake_form, "Intake Form"))
+personality = maker.command(prompts["make_personality"] + utils.xml(summary, "bio"))
+description = (
+    f"You can talk to {patient_name} about anything, using the Method of Inquiry. "
+    "Feel free to get to know them, build trust, and help her prepare her for the trial."
+)
 print(patient_name)
 
 # %%
-summary = maker.command(prompts["summarize"] + utils.xml(intake_form, "Intake Form"))
-personality = maker.command(prompts["make_personality"] + utils.xml(summary, "bio"))
-
-
-# %%
-
-topics, importances, valences = [], [], []
-
 messages = [
     {
         "role": "system",
@@ -51,6 +49,7 @@ messages = [
 ]
 
 fact = ""
+topics, importances, valences = [], [], []
 for idx_memory in range(num_memories):
     print(f">>> Creating content for memory {idx_memory+1}/3 ...")
     importance = 0 if idx_memory == 0 else utils.get_importance(fact, classifier, 1, 1)
@@ -114,46 +113,21 @@ avatar = (
 
 # %%
 print(">>> Saving patient persona ...")
-persona_id = patient_name.lower()
 persona = {
-    "id": persona_id,
+    "id": patient_name.lower(),
     "name": patient_name,
-    "model": maker.model,
-    "summary": summary,
-    "personality": personality,
-    "avatar": avatar,
-    "description": "<DEFINE ME>",
     "agent_type": "patient",
     "user_type": "therapist",
+    "model_id": maker.model,
+    "avatar": avatar,
+    "description": description,
+    "definition": {
+        "module": "moe",
+        "summary": summary,
+        "personality": personality,
+    },
     "memories": memories,
 }
 
 utils.save_persona(persona)
-
-# %%
-activities = prompts["intention_setting_activities"]["biographer_questions"]
-for activity in activities:
-    for question in activities[activity]["questions"]:
-        messages = utils.make_system_prompt(persona, prompts, messages, personality, summary, activity)
-        maker.talkturn(question)
-
-reflections = prompts["intention_setting_activities"]["overall_assessment/reflection"]["questions"]
-for question in reflections:
-    messages = utils.make_system_prompt(persona, prompts, messages, personality, summary, activity)
-    maker.talkturn(question)
-
-qa = "\n".join([("Q: " if m["role"] == "user" else "A: ") + m["content"] for m in messages[1:]])
-system_prompt = utils.parse(
-    prompts["intention_summary"], subs={"summary": summary, "personality": personality, "qa": qa}
-)
-intention_summary = maker.command(system_prompt)
-
-
-# %%
-
-persona["intention"] = {}
-persona["intention_summary"] = intention_summary
-q = [m["content"] for m in messages[1:]][::2]
-a = [m["content"] for m in messages[1:]][1::2]
-persona["search"] = {"topic": dict(zip(q, a))}
-utils.save_persona(persona)
+print(">>> Success!")

@@ -97,7 +97,7 @@ def get_persona(id: str):
 def save_persona(persona: dict):
     persona_path = get_root_dir() / "patients" / f"{persona['id']}.yaml"
     with open(persona_path, "w") as file:
-        file.write(yaml.safe_dump(persona))
+        file.write(yaml.safe_dump(persona, sort_keys=False))
 
 
 def get_personas():
@@ -172,14 +172,13 @@ def combine_topic_memories(messages, topics, valences, importances):
     memories = [
         {
             "type": "topic",
-            "embed_text": topics[i].lower(),
+            "embed": topics[i].lower(),
             "content": messages[2 * i + 2]["content"],
             "metadata": {
-                "biographers_question": messages[2 * i + 1]["content"],
-                "valence": str(np.round(valences[i], 3)),
-                "valence_belief": str(np.round(valence_beliefs[i], 3)),
-                "importance": str(np.round(importances[i], 3)),
-                "importance_belief": str(np.round(importance_beliefs[i], 3)),
+                "valence": float(np.round(valences[i], 3)),
+                "valence_belief": float(np.round(valence_beliefs[i], 3)),
+                "importance": float(np.round(importances[i], 3)),
+                "importance_belief": float(np.round(importance_beliefs[i], 3)),
             },
         }
         for i in range(len(topics))
