@@ -36,7 +36,7 @@ summary = maker.command(prompts["summarize"] + utils.xml(intake_form, "Intake Fo
 personality = maker.command(prompts["make_personality"] + utils.xml(summary, "bio"))
 description = (
     f"You can talk to {patient_name} about anything, using the Method of Inquiry. "
-    "Feel free to get to know them, build trust, and help her prepare her for the trial."
+    "Feel free to get to know them, build trust, and help them prepare for the trial."
 )
 print(patient_name)
 
