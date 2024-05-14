@@ -15,7 +15,7 @@
 
     - ### 3. Use
         ```bash
-        python chat_with.py roberta
+        python chat_with.py leilani
         ```
 
 - ## Make Your Own Patient in 1 step

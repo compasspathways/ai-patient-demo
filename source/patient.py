@@ -34,11 +34,7 @@ class Patient:
 
     def respond_to(self, message):
         self.conversation.append({"role": "user", "content": message})
-        response = (
-            self.client.chat.completions.create(model=self.model, messages=self.conversation)
-            .choices[0]
-            .message.content
-        )
+        response = ()
         self.conversation.append({"role": "assistant", "content": response})
 
         return response

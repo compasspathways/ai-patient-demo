@@ -171,7 +171,6 @@ def combine_topic_memories(messages, topics, valences, importances):
     importance_beliefs = np.array([np.random.uniform(0, i, 1)[0] for i in importances])
     memories = [
         {
-            "type": "topic",
             "embed": topics[i].lower(),
             "content": messages[2 * i + 2]["content"],
             "metadata": {

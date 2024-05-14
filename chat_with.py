@@ -4,7 +4,9 @@ import sys
 import gradio as gr
 import yaml
 
-from source.patient import Patient
+# from source.patient import Patient
+from source.agent import Patient
+from source.dbm import DatabaseManager
 
 patient_id = sys.argv[1]
 
@@ -18,7 +20,8 @@ except FileNotFoundError:
     )
     raise
 
-patient = Patient(patient_id, patient_persona)
+dbm = DatabaseManager()
+patient = Patient(dbm, patient_persona)
 
 
 def patient_response(message, history):

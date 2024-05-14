@@ -116,13 +116,10 @@ print(">>> Saving patient persona ...")
 persona = {
     "id": patient_name.lower(),
     "name": patient_name,
-    "agent_type": "patient",
-    "user_type": "therapist",
     "model_id": maker.model,
     "avatar": avatar,
     "description": description,
     "definition": {
-        "module": "moe",
         "summary": summary,
         "personality": personality,
     },
