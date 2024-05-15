@@ -26,4 +26,4 @@ def xml(input: str, tag: str):
 
 
 def get_root_dir():
-    return pathlib.Path(__file__).parent.parent.parent
+    return pathlib.Path(__file__).parent.parent

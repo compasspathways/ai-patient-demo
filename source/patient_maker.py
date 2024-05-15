@@ -8,7 +8,7 @@ class PatientMaker:
     def __init__(self):
         self.client = openai.OpenAI()
         self.messages = []
-        self.model = "gpt-4-0125-preview"
+        self.model = "gpt-4-1106-preview"
 
     def forget(self):
         self.messages = []

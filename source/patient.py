@@ -13,7 +13,6 @@ from . import patient_utils
 DEFAULT_STATE = {
     "num_valence_reflections": 0,
     "num_importance_reflections": 0,
-    "intention_set": 0.0,
     "topic": {},
 }
 
@@ -24,23 +23,24 @@ EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "BAAI/bge-large-en-v1.5")
 CACHE_DIR = patient_utils.get_root_dir() / "cache"
 
 STEPS_TO_REFLECTION = int(os.getenv("STEPS_TO_REFLECTION", 6))
-INTENTION_INCREMENT = float(os.getenv("INTENTION_INCREMENT", 0.15))
 
 TOP_RELEVANT_MEMORIES_TO_FETCH = int(os.getenv("TOP_RELEVANT_MEMORIES_TO_FETCH", 5))
 
 
 class Patient:
-    def __init__(self, persona: dict, conversation: List[dict], prompts: dict):
+    def __init__(self, persona: dict, prompts: dict):
         self.persona_id = persona["id"]
         self.persona_name = persona["name"]
         self.summary = persona["definition"]["summary"]
         self.personality = persona["definition"]["personality"]
 
         self.prompts = prompts
-        self.conversation = conversation
+        self.conversation = prompts["initial_conversation"]
+        self.conversation[0]["content"] = self.conversation[0]["content"].replace(
+            "[PATIENT_NAME]", self.persona_name
+        )
         self.conversation_summary = None
         self.steps_to_reflection = STEPS_TO_REFLECTION
-        self.intention_increment = INTENTION_INCREMENT
         self.state = DEFAULT_STATE
         self.conversation_lines_forgotten = 0
 
@@ -76,19 +76,21 @@ class Patient:
         return embeddings.astype(np.float64)
 
     def get_top_memories(self, embedding_vector: np.ndarray) -> tuple:
-        embeddings = np.array([memory["embedding"] for memory in self.memories])
+        embeddings = np.array([memory["embedding"] for memory in self.memories.values()])
         distances = np.linalg.norm(np.array(embeddings) - np.array(embedding_vector), axis=1)
 
         idxs = np.argpartition(distances, TOP_RELEVANT_MEMORIES_TO_FETCH)[:TOP_RELEVANT_MEMORIES_TO_FETCH]
 
-        top_memories_keys = np.array(self.memories.keys())[idxs]
-        top_memories = [self.memories[key] for key in top_memories_keys]
+        top_memories_keys = np.array(list(self.memories.keys()))[idxs]
+        top_memories = [
+            {**self.memories[key], "distance": distance}
+            for key, distance in zip(top_memories_keys, distances[idxs])
+        ]
 
-        types = np.array([memory["type"] for memory in top_memories])
-        contents = np.array([memory["embed_text"] for memory in top_memories])
+        contents = np.array([memory["embed"] for memory in top_memories])
         entailments = 2 - np.array([memory["distance"] for memory in top_memories])
 
-        return types, contents, entailments
+        return contents, entailments
 
     def _parse(self, text: str, subs: dict = None, pattern=r"\{([^}]+)\}"):
         subs_base = {k.upper(): v for k, v in self.__dict__.items()}
@@ -220,10 +222,10 @@ class Patient:
                 self.prompts["memories_topic"]["preamble"],
                 {"CONTENT": self.memories[topic]["content"]},
             )
-            + self.prompts["state_descriptions"]["importance_descriptions"][str(importance_likert)]
+            + self.prompts["state_descriptions"]["importance_descriptions"][importance_likert]
             + self._parse(
                 self.prompts["memories_topic"]["mood"],
-                {"MOOD": self.prompts["state_descriptions"]["valence_descriptions"][str(mood_likert)]},
+                {"MOOD": self.prompts["state_descriptions"]["valence_descriptions"][mood_likert]},
             )
         )
 
@@ -293,44 +295,11 @@ class Patient:
 
         return system_prompt, metadata
 
-    def _intention_prompt(self, intentions, entailments):
-        intention = intentions[np.argmax(entailments)]
-
-        system_prompt = (
-            patient_utils.xml(self._parse(self.prompts["system_preamble"]), "preamble")
-            + patient_utils.xml(self.summary, "bio")
-            + patient_utils.xml(self.personality, "personality")
-        )
-
-        if self.conversation_summary is not None:
-            system_prompt += self._parse(self.prompts["summarize"]["previous_summary"])
-
-        intention_likert = min(3, int(np.floor(self.state["intention_set"] * 4)))
-        system_prompt += self._parse(
-            self.prompts["intention_setting_ability"][str(intention_likert)],
-            {"INTENTION": self.memories[intention]["content"]},
-        )
-        system_prompt += patient_utils.xml(self._parse(self.prompts["intention_stance"]), "stance")
-        self._update_intention_state()
-
-        return system_prompt, {}
-
-    def _update_intention_state(self):
-        self.state["intention_set"] += self.intention_increment
-        self.state["intention_set"] = min(1, self.state["intention_set"])
-
     def _topic_messages(self):
         embedding_vector = self._get_embedding(self.conversation[-1]["content"])
-        types, contents, entailments = self.get_top_memories(embedding_vector)
+        contents, entailments = self.get_top_memories(embedding_vector)
 
-        type = types[np.argmax(entailments)]
-        contents = contents[types == type]
-        entailments = entailments[types == type]
-
-        if type == "topic":
-            system_prompt, metadata = self._topical_prompt(contents, entailments)
-        elif type == "intention":
-            system_prompt, metadata = self._intention_prompt(contents, entailments)
+        system_prompt, metadata = self._topical_prompt(contents, entailments)
 
         messages = [{"role": "system", "content": system_prompt}] + self.conversation[
             self.conversation_lines_forgotten :
@@ -425,14 +394,12 @@ class Patient:
             [
                 abs(float(self.memories[t]["valence"]) - float(self.memories[t]["valence_belief"]))
                 for t in self.memories
-                if self.memories[t]["type"] == "topic"
             ]
         )
         importance_cap = np.mean(
             [
                 float(self.memories[t]["importance"]) - float(self.memories[t]["importance_belief"])
                 for t in self.memories
-                if self.memories[t]["type"] == "topic"
             ]
         )
 
@@ -454,5 +421,7 @@ class Patient:
         self._summarize()
         messages, metadata = self._response_messages()
         messages = self._trim(messages)
+        response = self._llm_call(messages)
+        self.conversation.append({"role": "assistant", "content": response})
 
-        return self._llm_call(messages), messages, metadata
+        return response, messages, metadata

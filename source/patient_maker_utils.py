@@ -80,8 +80,8 @@ def xml(message: str, tag: str):
     return f"<{tag.upper()}>{message}</{tag.upper()}>"
 
 
-def get_prompts(file_name: str):
-    prompts_path = get_root_dir() / "prompts" / f"{file_name}.yaml"
+def get_prompts():
+    prompts_path = get_root_dir() / "prompts" / "make.yaml"
     with open(prompts_path, "r") as file:
         prompts = yaml.safe_load(file)
     return prompts

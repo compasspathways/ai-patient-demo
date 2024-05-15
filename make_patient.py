@@ -12,7 +12,7 @@ from source import patient_maker, patient_maker_utils
 # %% Init
 dotenv.load_dotenv(override=True)
 maker = patient_maker.PatientMaker()
-prompts = patient_maker_utils.get_prompts("make")
+prompts = patient_maker_utils.get_prompts()
 classifier = patient_maker_utils.get_classifier()
 s3d = sentiment3d.Sentiment3D()
 
