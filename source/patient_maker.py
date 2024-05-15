@@ -1,7 +1,7 @@
 import openai
 import tiktoken
 
-from . import utils
+from . import patient_maker_utils
 
 
 class PatientMaker:
@@ -37,14 +37,14 @@ class PatientMaker:
 
     @staticmethod
     def read(filepath):
-        with open(utils.get_root_dir() / "forms" / f"{filepath}.txt", "r") as file:
+        with open(patient_maker_utils.get_root_dir() / "forms" / f"{filepath}.txt", "r") as file:
             text = file.read()
 
         return text
 
     @staticmethod
     def write(form, name):
-        with open(utils.get_root_dir() / "forms" / f"{name}.txt", "w") as file:
+        with open(patient_maker_utils.get_root_dir() / "forms" / f"{name}.txt", "w") as file:
             file.write(form)
 
     @staticmethod

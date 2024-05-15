@@ -4,9 +4,7 @@ import sys
 import gradio as gr
 import yaml
 
-# from source.patient import Patient
-from source.agent import Patient
-from source.dbm import DatabaseManager
+from source.patient import Patient
 
 patient_id = sys.argv[1]
 
@@ -20,18 +18,18 @@ except FileNotFoundError:
     )
     raise
 
-dbm = DatabaseManager()
-patient = Patient(dbm, patient_persona)
+
+patient = Patient(patient_persona, [], [])
 
 
 def patient_response(message, history):
-    return patient.respond_to(message)
+    return patient.response(message)[0]
 
 
 gr.ChatInterface(
     patient_response,
     title="AI Patient",
-    description=f"Talking to {patient_id.title()} 👤 ",
+    description=f"{patient_persona['description']}",
     submit_btn="Send",
     retry_btn=None,
     undo_btn=None,

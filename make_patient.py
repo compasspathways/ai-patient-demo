@@ -7,13 +7,13 @@ import numpy as np
 import python_avatars as pa
 import sentiment3d
 
-from source import patient_maker, utils
+from source import patient_maker, patient_maker_utils
 
 # %% Init
 dotenv.load_dotenv(override=True)
 maker = patient_maker.PatientMaker()
-prompts = utils.get_prompts("make")
-classifier = utils.get_classifier()
+prompts = patient_maker_utils.get_prompts("make")
+classifier = patient_maker_utils.get_classifier()
 s3d = sentiment3d.Sentiment3D()
 
 num_memories = 3
@@ -32,8 +32,8 @@ maker.print_messages()
 intake_form = "\n".join([message["content"] for message in maker.messages if message["role"] == "assistant"])
 patient_name = maker.command(f'{prompts["get_name"]}\n{intake_form}')
 maker.write(intake_form, f"{patient_name}")
-summary = maker.command(prompts["summarize"] + utils.xml(intake_form, "Intake Form"))
-personality = maker.command(prompts["make_personality"] + utils.xml(summary, "bio"))
+summary = maker.command(prompts["summarize"] + patient_maker_utils.xml(intake_form, "Intake Form"))
+personality = maker.command(prompts["make_personality"] + patient_maker_utils.xml(summary, "bio"))
 description = (
     f"You can talk to {patient_name} about anything, using the Method of Inquiry. "
     "Feel free to get to know them, build trust, and help them prepare for the trial."
@@ -44,7 +44,9 @@ print(patient_name)
 messages = [
     {
         "role": "system",
-        "content": prompts["make_fact"] + utils.xml(summary, "bio") + utils.xml(personality, "personality"),
+        "content": prompts["make_fact"]
+        + patient_maker_utils.xml(summary, "bio")
+        + patient_maker_utils.xml(personality, "personality"),
     }
 ]
 
@@ -52,17 +54,19 @@ fact = ""
 topics, importances, valences = [], [], []
 for idx_memory in range(num_memories):
     print(f">>> Creating content for memory {idx_memory+1}/3 ...")
-    importance = 0 if idx_memory == 0 else utils.get_importance(fact, classifier, 1, 1)
+    importance = 0 if idx_memory == 0 else patient_maker_utils.get_importance(fact, classifier, 1, 1)
     importance_likert = 0 if idx_memory == 0 else 1 + int(np.round(4 * importance))
     openai_response = maker.client.chat.completions.create(
-        model=maker.model, messages=utils.biographer(maker, importance_likert, prompts)
+        model=maker.model, messages=patient_maker_utils.biographer(maker, importance_likert, prompts)
     )
 
     messages.append({"role": "user", "content": openai_response.choices[0].message.content})
 
     messages[0] = {
         "role": "system",
-        "content": prompts["guess_topic"] + utils.xml(summary, "bio") + utils.xml(personality, "personality"),
+        "content": prompts["guess_topic"]
+        + patient_maker_utils.xml(summary, "bio")
+        + patient_maker_utils.xml(personality, "personality"),
     }
     topic = (
         maker.client.chat.completions.create(model=maker.model, messages=[messages[0]] + messages[-3:])
@@ -74,7 +78,9 @@ for idx_memory in range(num_memories):
 
     messages[0] = {
         "role": "system",
-        "content": prompts["make_fact"] + utils.xml(summary, "bio") + utils.xml(personality, "personality"),
+        "content": prompts["make_fact"]
+        + patient_maker_utils.xml(summary, "bio")
+        + patient_maker_utils.xml(personality, "personality"),
     }
     fact = maker.client.chat.completions.create(model=maker.model, messages=messages).choices[0].message.content
     messages.append({"role": "assistant", "content": fact})
@@ -83,12 +89,12 @@ for idx_memory in range(num_memories):
     valences.append(np.round(s3d.get_utterance_sentiment(fact)["valence"], 3))
 print(">>> Finished!")
 
-memories = utils.combine_topic_memories(messages, topics, valences, importances)
+memories = patient_maker_utils.combine_topic_memories(messages, topics, valences, importances)
 
 
 # %% Avatar
 print(">>> Creating avatar for the patient ...")
-skin_colors = utils.get_skin_colors()
+skin_colors = patient_maker_utils.get_skin_colors()
 skin_color = random.choice(skin_colors)
 random_color = "#" + "".join([hex(random.randint(0, 256))[2:].rjust(2, "0") for _ in range(3)])
 
@@ -126,5 +132,5 @@ persona = {
     "memories": memories,
 }
 
-utils.save_persona(persona)
+patient_maker_utils.save_persona(persona)
 print(">>> Success!")
