@@ -1,11 +1,9 @@
 import os
 import re
-import warnings
 from typing import List
 
 import numpy as np
 import openai
-import sentence_transformers
 from tqdm import tqdm
 
 from . import patient_utils
@@ -13,14 +11,11 @@ from . import patient_utils
 DEFAULT_STATE = {"num_valence_reflections": 0, "num_importance_reflections": 0, "topic": {}}
 COMPLETION_TOKENS = int(os.getenv("COMPLETION_TOKENS", 500))
 CONTEXT_WINDOW = int(os.getenv("CONTEXT_WINDOW", 4097))
-EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "BAAI/bge-large-en-v1.5")
-CACHE_DIR = patient_utils.get_root_dir() / "cache"
 STEPS_TO_REFLECTION = int(os.getenv("STEPS_TO_REFLECTION", 6))
 TOP_RELEVANT_MEMORIES_TO_FETCH = int(os.getenv("TOP_RELEVANT_MEMORIES_TO_FETCH", 5))
 
 
 class Patient:
-
     def __init__(self, persona: dict, prompts: dict, initial_conversation: List[dict]):
         self.persona_id = persona["id"]
         self.persona_name = persona["name"]
@@ -38,7 +33,7 @@ class Patient:
         self.context_window = CONTEXT_WINDOW
         self.completion_tokens = COMPLETION_TOKENS
         self.api_client = openai.OpenAI()
-        self._set_embedding_model()
+        self.embedding_model = patient_utils.get_embedding_model()
 
         self.tokens_to_summarize = int(0.4 * self.context_window)
         self.tokens_for_summary = int(0.1 * self.context_window)
@@ -53,13 +48,6 @@ class Patient:
             patient_memory.update(memory["metadata"])
             patient_memory["embedding"] = self._get_embedding(memory["embed"])
             self.memories[memory["embed"]] = patient_memory
-
-    def _set_embedding_model(self):
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            self.embedding_model = sentence_transformers.SentenceTransformer(
-                EMBEDDING_MODEL, cache_folder=CACHE_DIR
-            )
 
     def _get_embedding(self, text: str) -> np.ndarray:
         embeddings = self.embedding_model.encode(text, show_progress_bar=False, normalize_embeddings=True)
@@ -103,15 +91,6 @@ class Patient:
 
         return contents, entailments
 
-    def _get_sentences(self, text: str, pattern=r"([^.!?]+)([.!?]+[\s]*)") -> list:
-        matches = re.findall(pattern, text)
-        return [m[0] + m[1] for m in matches]
-
-    def _excise_middle_sentence(self, text: str, sep: str = " "):
-        sentences = self._get_sentences(text)
-        sentences.pop(len(sentences) // 2)
-        return sep.join(sentences)
-
     def _trim(self, messages: List[dict]):
         if patient_utils.get_messages_size(messages) + self.completion_tokens - self.context_window > 0:
             print("Emergency messages trimming triggered.")
@@ -121,11 +100,11 @@ class Patient:
             # if there's a system prompt and dialog, remove dialog first
             if messages[0]["role"] == "system" and len(messages) > 1:
                 if len(messages[1]["content"]) > 0:
-                    messages[1]["content"] = self._excise_middle_sentence(messages[1]["content"])
+                    messages[1]["content"] = patient_utils.excise_middle_sentence(messages[1]["content"])
                 if len(messages[1]["content"]) == 0:
                     messages.pop(1)
             else:
-                messages[0]["content"] = self._excise_middle_sentence(messages[0]["content"])
+                messages[0]["content"] = patient_utils.excise_middle_sentence(messages[0]["content"])
         return messages
 
     def _recall_conversation(self):
