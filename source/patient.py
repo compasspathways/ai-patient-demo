@@ -10,35 +10,25 @@ from tqdm import tqdm
 
 from . import patient_utils
 
-DEFAULT_STATE = {
-    "num_valence_reflections": 0,
-    "num_importance_reflections": 0,
-    "topic": {},
-}
-
+DEFAULT_STATE = {"num_valence_reflections": 0, "num_importance_reflections": 0, "topic": {}}
 COMPLETION_TOKENS = int(os.getenv("COMPLETION_TOKENS", 500))
 CONTEXT_WINDOW = int(os.getenv("CONTEXT_WINDOW", 4097))
-
 EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "BAAI/bge-large-en-v1.5")
 CACHE_DIR = patient_utils.get_root_dir() / "cache"
-
 STEPS_TO_REFLECTION = int(os.getenv("STEPS_TO_REFLECTION", 6))
-
 TOP_RELEVANT_MEMORIES_TO_FETCH = int(os.getenv("TOP_RELEVANT_MEMORIES_TO_FETCH", 5))
 
 
 class Patient:
-    def __init__(self, persona: dict, prompts: dict):
+
+    def __init__(self, persona: dict, prompts: dict, initial_conversation: List[dict]):
         self.persona_id = persona["id"]
         self.persona_name = persona["name"]
         self.summary = persona["definition"]["summary"]
         self.personality = persona["definition"]["personality"]
 
         self.prompts = prompts
-        self.conversation = prompts["initial_conversation"]
-        self.conversation[0]["content"] = self.conversation[0]["content"].replace(
-            "[PATIENT_NAME]", self.persona_name
-        )
+        self.conversation = initial_conversation
         self.conversation_summary = None
         self.steps_to_reflection = STEPS_TO_REFLECTION
         self.state = DEFAULT_STATE
@@ -75,7 +65,28 @@ class Patient:
         embeddings = self.embedding_model.encode(text, show_progress_bar=False, normalize_embeddings=True)
         return embeddings.astype(np.float64)
 
-    def get_top_memories(self, embedding_vector: np.ndarray) -> tuple:
+    def _insert_memory(self, text: str):
+        self.memories[text] = {
+            "embed": text,
+            "embedding": self._get_embedding(text),
+            "content": text,
+            "metadata": {},
+        }
+
+    def _parse(self, text: str, subs: dict = None, pattern=r"\{([^}]+)\}"):
+        subs_base = {k.upper(): v for k, v in self.__dict__.items()}
+        if subs is None:
+            subs = subs_base
+        else:
+            subs.update(subs_base)
+
+        def replace(match):
+            key = match.group(1)
+            return str(subs.get(key, match.group(0)))
+
+        return re.sub(pattern, replace, text)
+
+    def _get_top_memories(self, embedding_vector: np.ndarray) -> tuple:
         embeddings = np.array([memory["embedding"] for memory in self.memories.values()])
         distances = np.linalg.norm(np.array(embeddings) - np.array(embedding_vector), axis=1)
 
@@ -91,19 +102,6 @@ class Patient:
         entailments = 2 - np.array([memory["distance"] for memory in top_memories])
 
         return contents, entailments
-
-    def _parse(self, text: str, subs: dict = None, pattern=r"\{([^}]+)\}"):
-        subs_base = {k.upper(): v for k, v in self.__dict__.items()}
-        if subs is None:
-            subs = subs_base
-        else:
-            subs.update(subs_base)
-
-        def replace(match):
-            key = match.group(1)
-            return str(subs.get(key, match.group(0)))
-
-        return re.sub(pattern, replace, text)
 
     def _get_sentences(self, text: str, pattern=r"([^.!?]+)([.!?]+[\s]*)") -> list:
         matches = re.findall(pattern, text)
@@ -162,8 +160,17 @@ class Patient:
 
         return messages
 
-    def _insert_memory():
-        pass
+    def _llm_call(self, messages: List[dict]) -> str:
+        print(
+            "\n*** START LLM CALL ***\n"
+            + "\n".join([f"{message['role']}: {message['content']}" for message in messages])
+            + "\n*** END LLM CALL ***\n"
+        )
+        return (
+            self.api_client.chat.completions.create(model=self.model_name, messages=messages)
+            .choices[0]
+            .message.content
+        )
 
     def _summarize(self):
         if (
@@ -176,22 +183,9 @@ class Patient:
             self.conversation_summary = self._llm_call(messages)
 
             self._insert_memory(
-                self.persona_id,
                 self.conversation_summary,
                 type="summary",
             )
-
-    def _llm_call(self, messages: List[dict]) -> str:
-        print(
-            "\n*** START LLM CALL ***\n"
-            + "\n".join([f"{message['role']}: {message['content']}" for message in messages])
-            + "\n*** END LLM CALL ***\n"
-        )
-        return (
-            self.api_client.chat.completions.create(model=self.model_name, messages=messages)
-            .choices[0]
-            .message.content
-        )
 
     def _get_mood(self, topics, entailments):
         valence_beliefs, importance_beliefs = [], []
@@ -297,7 +291,7 @@ class Patient:
 
     def _topic_messages(self):
         embedding_vector = self._get_embedding(self.conversation[-1]["content"])
-        contents, entailments = self.get_top_memories(embedding_vector)
+        contents, entailments = self._get_top_memories(embedding_vector)
 
         system_prompt, metadata = self._topical_prompt(contents, entailments)
 

@@ -19,17 +19,16 @@ except FileNotFoundError:
     )
     raise
 
-try:
-    with open(pathlib.Path("prompts/chat.yaml"), "r") as file:
-        prompts = yaml.safe_load(file)
-except FileNotFoundError:
-    print(
-        f">>> Given patient id: {patient_id} is not found in the patients folder! Please either create it using "
-        " patient maker or use on of the existing ones!"
-    )
-    raise
 
-patient = Patient(patient_persona, prompts)
+with open(pathlib.Path("prompts/chat.yaml"), "r") as file:
+    prompts = yaml.safe_load(file)
+
+initial_conversation = prompts["initial_conversation"]
+initial_conversation[0]["content"] = initial_conversation[0]["content"].replace(
+    "[PATIENT_NAME]", patient_persona["name"]
+)
+
+patient = Patient(patient_persona, prompts, initial_conversation)
 
 
 def patient_response(message, history):
@@ -44,9 +43,7 @@ app = gr.ChatInterface(
         height=200,
         value=[
             [therapist["content"], patient["content"]]
-            for therapist, patient in zip(
-                prompts["initial_conversation"][0::2], prompts["initial_conversation"][1::2]
-            )
+            for therapist, patient in zip(initial_conversation[0::2], initial_conversation[1::2])
         ],
     ),
     title=f"AI Patient: {patient_persona['name']} 👤",

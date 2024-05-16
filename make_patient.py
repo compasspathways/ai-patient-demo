@@ -1,4 +1,5 @@
 # %% Imports
+import os
 import random
 import string
 
@@ -15,8 +16,7 @@ maker = patient_maker.PatientMaker()
 prompts = patient_maker_utils.get_prompts()
 classifier = patient_maker_utils.get_classifier()
 s3d = sentiment3d.Sentiment3D()
-
-num_memories = 3
+num_memories = int(os.getenv("NUMBER_OF_MEMORIES_FOR_NEW_PATIENT", 10))
 
 # %% Intake Form
 print(">>> Making Intake Form ...")
