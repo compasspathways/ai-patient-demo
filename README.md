@@ -18,7 +18,7 @@
         python chat_with.py leilani
         ```
 
-- ## Make Your Own Patient in 1 step
+- ## Make Your Own Patient in One Step
     ```bash
     python make_patient.py
     ```

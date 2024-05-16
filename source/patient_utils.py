@@ -34,7 +34,7 @@ def get_root_dir():
     return pathlib.Path(__file__).parent.parent
 
 
-def get_embedding_model(self):
+def get_embedding_model():
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         return sentence_transformers.SentenceTransformer(EMBEDDING_MODEL, cache_folder=get_root_dir() / "cache")
