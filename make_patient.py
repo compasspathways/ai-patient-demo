@@ -53,7 +53,7 @@ messages = [
 fact = ""
 topics, importances, valences = [], [], []
 for idx_memory in range(num_memories):
-    print(f">>> Creating content for memory {idx_memory+1}/3 ...")
+    print(f">>> Creating content for memory {idx_memory+1}/{num_memories} ...")
     importance = 0 if idx_memory == 0 else patient_maker_utils.get_importance(fact, classifier, 1, 1)
     importance_likert = 0 if idx_memory == 0 else 1 + int(np.round(4 * importance))
     openai_response = maker.client.chat.completions.create(
