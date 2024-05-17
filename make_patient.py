@@ -43,7 +43,7 @@ description = (
     f"You can talk to {patient_name} about anything, using the Method of Inquiry. "
     "Feel free to get to know them, build trust, and help them prepare for the trial."
 )
-logger.info(patient_name)
+logger.info(f"Patient Name: {patient_name}")
 
 # %% Memories
 messages = [
