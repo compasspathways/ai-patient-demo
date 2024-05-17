@@ -86,10 +86,10 @@ class Patient:
             for key, distance in zip(top_memories_keys, distances[idxs])
         ]
 
-        contents = np.array([memory["embed"] for memory in top_memories])
+        memory_contents = np.array([memory["embed"] for memory in top_memories])
         entailments = 2 - np.array([memory["distance"] for memory in top_memories])
 
-        return contents, entailments
+        return memory_contents, entailments
 
     def _trim(self, messages: List[dict]):
         if patient_utils.get_messages_size(messages) + self.completion_tokens - self.context_window > 0:
@@ -220,27 +220,23 @@ class Patient:
 
         return system_prompt
 
-    def _update_topic_state(self, topic):
-        new_topic = topic not in self.state["topic"]
+    def _update_topic_state(self, topic: str):
+        if topic not in self.state["topic"]:
+            self.state["topic"][topic] = {}
+
         valence_delta = 0.5 * (
-            (self.state["topic"][topic]["valence_delta"] if not new_topic else 0)
+            self.state["topic"][topic].get("valence_delta", 0)
             + self.memories[topic]["valence"]
             - self.memories[topic]["valence_belief"]
         )
 
         importance_delta = 0.5 * (
-            (self.state["topic"][topic]["importance_delta"] if not new_topic else 0)
+            self.state["topic"][topic].get("importance_delta", 0)
             + self.memories[topic]["importance"]
             - self.memories[topic]["importance_belief"]
         )
 
-        if new_topic:
-            self.state["topic"][topic] = {}
-            for key, value in (
-                ("importance_delta", importance_delta),
-                ("valence_delta", valence_delta),
-            ):
-                self.state["topic"][topic][key] = value
+        self.state["topic"][topic].update({"importance_delta": importance_delta, "valence_delta": valence_delta})
 
         return valence_delta, importance_delta
 
@@ -250,29 +246,30 @@ class Patient:
         return int(np.round(perception * 27 + 8))
 
     def _topical_prompt(self, topics, entailments):
-        topic = topics[np.argmax(entailments)]
+        top_topic = topics[np.argmax(entailments)]
+        valence_delta, importance_delta = self._update_topic_state(top_topic)
 
-        valence_delta, importance_delta = self._update_topic_state(topic)
         mood = self._get_mood(topics, entailments)
-        topic_content = self._topic_content(topic, mood)
-        verbosity = self._get_verbosity(topic)
+        topic_content = self._topic_content(top_topic, mood)
+        verbosity = self._get_verbosity(top_topic)
         system_prompt = self._topical_system_prompt(topic_content, verbosity)
+
         metadata = {
-            "topic": topic,
+            "topic": top_topic,
             "General Mood": mood,
-            "Perceived Valence": self.memories[topic]["valence_belief"] + valence_delta,
-            "True Valence": self.memories[topic]["valence_belief"],
-            "Perceived Importance": self.memories[topic]["importance_belief"] + importance_delta,
-            "True Importance": self.memories[topic]["importance_belief"],
+            "Perceived Valence": self.memories[top_topic]["valence_belief"] + valence_delta,
+            "True Valence": self.memories[top_topic]["valence_belief"],
+            "Perceived Importance": self.memories[top_topic]["importance_belief"] + importance_delta,
+            "True Importance": self.memories[top_topic]["importance_belief"],
         }
 
         return system_prompt, metadata
 
     def _topic_messages(self):
         embedding_vector = self._get_embedding(self.conversation[-1]["content"])
-        contents, entailments = self._get_top_memories(embedding_vector)
+        topics, entailments = self._get_top_memories(embedding_vector)
 
-        system_prompt, metadata = self._topical_prompt(contents, entailments)
+        system_prompt, metadata = self._topical_prompt(topics, entailments)
 
         messages = [{"role": "system", "content": system_prompt}] + self.conversation[
             self.conversation_lines_forgotten :
@@ -280,7 +277,7 @@ class Patient:
 
         return messages, metadata
 
-    def _reflection_messages(self, n=2):
+    def _reflection_messages(self, top_n: int = 2):
         system_prompt = self._parse(self.prompts["system_preamble"]) + patient_utils.xml(
             self.personality, "personality"
         )
@@ -315,7 +312,7 @@ class Patient:
                     self.state["topic"].items(),
                     key=lambda item: abs(item[1]["valence_delta"]),
                     reverse=True,
-                )[:n]
+                )[:top_n]
             }
             topics = topics.union(best_valence_topics)
 
@@ -326,23 +323,23 @@ class Patient:
                     self.state["topic"].items(),
                     key=lambda item: abs(item[1]["importance_delta"]),
                     reverse=True,
-                )[:n]
+                )[:top_n]
             }
             topics = topics.union(best_importance_topics)
 
-        for t in topics:
+        for topic in topics:
             valence_score = np.round(
-                float(self.memories[t]["valence_belief"]) + self.state["topic"][t]["valence_delta"],
+                float(self.memories[topic]["valence_belief"]) + self.state["topic"][topic]["valence_delta"],
                 2,
             )
             importance_score = np.round(
-                float(self.memories[t]["importance_belief"]) + self.state["topic"][t]["importance_delta"],
+                float(self.memories[topic]["importance_belief"]) + self.state["topic"][topic]["importance_delta"],
                 2,
             )
             system_prompt = (
                 system_prompt
-                + f"Topic:{t};"
-                + self.memories[t]["content"]
+                + f"Topic:{topic};"
+                + self.memories[topic]["content"]
                 + self._parse(
                     self.prompts["reflect"]["scores"],
                     {
@@ -361,18 +358,19 @@ class Patient:
         return messages, metadata
 
     def _check_to_reflect(self):
-        valence_deltas = np.array([v["valence_delta"] for v in self.state["topic"].values()])
-        importance_deltas = np.array([v["importance_delta"] for v in self.state["topic"].values()])
+        valence_deltas = np.array([topic["valence_delta"] for topic in self.state["topic"].values()])
+        importance_deltas = np.array([topic["importance_delta"] for topic in self.state["topic"].values()])
+
         valence_cap = np.mean(
             [
-                abs(float(self.memories[t]["valence"]) - float(self.memories[t]["valence_belief"]))
-                for t in self.memories
+                abs(float(self.memories[memory]["valence"]) - float(self.memories[memory]["valence_belief"]))
+                for memory in self.memories
             ]
         )
         importance_cap = np.mean(
             [
-                float(self.memories[t]["importance"]) - float(self.memories[t]["importance_belief"])
-                for t in self.memories
+                float(self.memories[memory]["importance"]) - float(self.memories[memory]["importance_belief"])
+                for memory in self.memories
             ]
         )
 
@@ -382,6 +380,12 @@ class Patient:
         self.reflect_importance = sum(importance_deltas) > (importance_cap * self.steps_to_reflection * 2) * (
             self.state["num_importance_reflections"] + 1
         )
+
+        if self.reflect_valence:
+            self.state["num_valence_reflections"] += 1
+
+        if self.reflect_importance:
+            self.state["num_importance_reflections"] += 1
 
         return self.reflect_valence or self.reflect_importance
 

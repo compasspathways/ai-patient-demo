@@ -32,7 +32,8 @@ patient = Patient(patient_persona, prompts, initial_conversation)
 
 
 def patient_response(message, history):
-    return patient.response(message)[0]
+    response, messages, metadata = patient.response(message)
+    return response
 
 
 app = gr.ChatInterface(
