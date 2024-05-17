@@ -8,7 +8,6 @@ from tqdm import tqdm
 
 from . import patient_utils
 
-DEFAULT_STATE = {"num_valence_reflections": 0, "num_importance_reflections": 0, "topic": {}}
 COMPLETION_TOKENS = int(os.getenv("COMPLETION_TOKENS", 500))
 CONTEXT_WINDOW = int(os.getenv("CONTEXT_WINDOW", 4097))
 STEPS_TO_REFLECTION = int(os.getenv("STEPS_TO_REFLECTION", 6))
@@ -26,8 +25,10 @@ class Patient:
         self.conversation = initial_conversation
         self.conversation_summary = None
         self.steps_to_reflection = STEPS_TO_REFLECTION
-        self.state = DEFAULT_STATE
+        self.topics = {}
         self.conversation_lines_forgotten = 0
+        self.num_valence_reflections = 0
+        self.num_importance_reflections = 0
 
         self.model_name = persona["model_id"]
         self.context_window = CONTEXT_WINDOW
@@ -171,9 +172,9 @@ class Patient:
         for topic in topics:
             valence = self.memories[topic]["valence_belief"]
             importance = self.memories[topic]["importance_belief"]
-            if topic in self.state["topic"]:
-                valence += self.state["topic"][topic]["valence_delta"]
-                importance += self.state["topic"][topic]["importance_delta"]
+            if topic in self.topics:
+                valence += self.topics[topic]["valence_delta"]
+                importance += self.topics[topic]["importance_delta"]
             valence_beliefs.append(valence)
             importance_beliefs.append(importance)
 
@@ -221,28 +222,28 @@ class Patient:
         return system_prompt
 
     def _update_topic_state(self, topic: str):
-        if topic not in self.state["topic"]:
-            self.state["topic"][topic] = {}
+        if topic not in self.topics:
+            self.topics[topic] = {}
 
         valence_delta = 0.5 * (
-            self.state["topic"][topic].get("valence_delta", 0)
+            self.topics[topic].get("valence_delta", 0)
             + self.memories[topic]["valence"]
             - self.memories[topic]["valence_belief"]
         )
 
         importance_delta = 0.5 * (
-            self.state["topic"][topic].get("importance_delta", 0)
+            self.topics[topic].get("importance_delta", 0)
             + self.memories[topic]["importance"]
             - self.memories[topic]["importance_belief"]
         )
 
-        self.state["topic"][topic].update({"importance_delta": importance_delta, "valence_delta": valence_delta})
+        self.topics[topic].update({"importance_delta": importance_delta, "valence_delta": valence_delta})
 
         return valence_delta, importance_delta
 
     def _get_verbosity(self, topic):
         # the system prompt will say to produce no more than 8-25 tokens, depending on perceived importance
-        perception = self.memories[topic]["importance_belief"] + self.state["topic"][topic]["importance_delta"]
+        perception = self.memories[topic]["importance_belief"] + self.topics[topic]["importance_delta"]
         return int(np.round(perception * 27 + 8))
 
     def _topical_prompt(self, topics, entailments):
@@ -309,7 +310,7 @@ class Patient:
             best_valence_topics = {
                 i[0]
                 for i in sorted(
-                    self.state["topic"].items(),
+                    self.topics.items(),
                     key=lambda item: abs(item[1]["valence_delta"]),
                     reverse=True,
                 )[:top_n]
@@ -320,7 +321,7 @@ class Patient:
             best_importance_topics = {
                 i[0]
                 for i in sorted(
-                    self.state["topic"].items(),
+                    self.topics.items(),
                     key=lambda item: abs(item[1]["importance_delta"]),
                     reverse=True,
                 )[:top_n]
@@ -329,11 +330,11 @@ class Patient:
 
         for topic in topics:
             valence_score = np.round(
-                float(self.memories[topic]["valence_belief"]) + self.state["topic"][topic]["valence_delta"],
+                float(self.memories[topic]["valence_belief"]) + self.topics[topic]["valence_delta"],
                 2,
             )
             importance_score = np.round(
-                float(self.memories[topic]["importance_belief"]) + self.state["topic"][topic]["importance_delta"],
+                float(self.memories[topic]["importance_belief"]) + self.topics[topic]["importance_delta"],
                 2,
             )
             system_prompt = (
@@ -358,8 +359,8 @@ class Patient:
         return messages, metadata
 
     def _check_to_reflect(self):
-        valence_deltas = np.array([topic["valence_delta"] for topic in self.state["topic"].values()])
-        importance_deltas = np.array([topic["importance_delta"] for topic in self.state["topic"].values()])
+        valence_deltas = np.array([topic["valence_delta"] for topic in self.topics.values()])
+        importance_deltas = np.array([topic["importance_delta"] for topic in self.topics.values()])
 
         valence_cap = np.mean(
             [
@@ -375,17 +376,17 @@ class Patient:
         )
 
         self.reflect_valence = sum(np.abs(valence_deltas)) > (valence_cap * self.steps_to_reflection * 2) * (
-            self.state["num_valence_reflections"] + 1
+            self.num_valence_reflections + 1
         )
         self.reflect_importance = sum(importance_deltas) > (importance_cap * self.steps_to_reflection * 2) * (
-            self.state["num_importance_reflections"] + 1
+            self.num_importance_reflections + 1
         )
 
         if self.reflect_valence:
-            self.state["num_valence_reflections"] += 1
+            self.num_valence_reflections += 1
 
         if self.reflect_importance:
-            self.state["num_importance_reflections"] += 1
+            self.num_importance_reflections += 1
 
         return self.reflect_valence or self.reflect_importance
 
