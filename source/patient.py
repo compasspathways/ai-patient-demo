@@ -54,14 +54,6 @@ class Patient:
         embeddings = self.embedding_model.encode(text, show_progress_bar=False, normalize_embeddings=True)
         return embeddings.astype(np.float64)
 
-    def _insert_memory(self, text: str):
-        self.memories[text] = {
-            "embed": text,
-            "embedding": self._get_embedding(text),
-            "content": text,
-            "metadata": {},
-        }
-
     def _parse(self, text: str, subs: dict = None, pattern=r"\{([^}]+)\}"):
         subs_base = {k.upper(): v for k, v in self.__dict__.items()}
         if subs is None:
@@ -162,10 +154,12 @@ class Patient:
 
             self.conversation_summary = self._llm_call(messages)
 
-            self._insert_memory(
-                self.conversation_summary,
-                type="summary",
-            )
+            self.memories[self.conversation_summary] = {
+                "embed": self.conversation_summary,
+                "embedding": self._get_embedding(self.conversation_summary),
+                "content": self.conversation_summary,
+                "metadata": {"type": "summary"},
+            }
 
     def _get_mood(self, topics, entailments):
         valence_beliefs, importance_beliefs = [], []
