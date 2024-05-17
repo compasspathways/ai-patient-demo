@@ -1,3 +1,4 @@
+import logging
 import os
 import pathlib
 import re
@@ -9,6 +10,8 @@ import torch
 import yaml
 from scipy.special import expit, logit
 from transformers import pipeline
+
+logger = logging.getLogger("ai-patient")
 
 
 def get_root_dir():
@@ -23,7 +26,7 @@ def get_classifier():
     else:
         device = "cpu"
 
-    print(f"Using device {device} for inference.")
+    logger.info(f"Using device {device} for inference.")
 
     classifier = pipeline(
         "zero-shot-classification",

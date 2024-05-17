@@ -1,30 +1,35 @@
 # %% Imports
+import logging
 import os
 import random
 import string
+import warnings
 
-import dotenv
 import numpy as np
 import python_avatars as pa
 import sentiment3d
 
 from source import patient_maker, patient_maker_utils
 
+logger = logging.getLogger("ai-patient")
+
 # %% Init
-dotenv.load_dotenv(override=True)
-maker = patient_maker.PatientMaker()
-prompts = patient_maker_utils.get_prompts()
-classifier = patient_maker_utils.get_classifier()
-s3d = sentiment3d.Sentiment3D()
-num_memories = int(os.getenv("NUMBER_OF_MEMORIES_FOR_NEW_PATIENT", 10))
+with warnings.catch_warnings():
+    warnings.simplefilter("ignore")
+    maker = patient_maker.PatientMaker()
+    prompts = patient_maker_utils.get_prompts()
+    classifier = patient_maker_utils.get_classifier()
+    logger.info("Instantiating sentiment model ..")
+    s3d = sentiment3d.Sentiment3D()
+    num_memories = int(os.getenv("NUMBER_OF_MEMORIES_FOR_NEW_PATIENT", 10))
 
 # %% Intake Form
-print(">>> Making Intake Form ...")
+logger.info("Making Intake Form ...")
 maker.messages = [{"role": "system", "content": prompts["patient_intake"]["fill_in"]}]
 for section, content in prompts["patient_intake"]["sections"].items():
     print(section)
     maker.talkturn(content)
-print(">>> done!")
+logger.info("done!")
 
 maker.print_messages()
 
@@ -38,7 +43,7 @@ description = (
     f"You can talk to {patient_name} about anything, using the Method of Inquiry. "
     "Feel free to get to know them, build trust, and help them prepare for the trial."
 )
-print(patient_name)
+logger.info(patient_name)
 
 # %% Memories
 messages = [
@@ -53,7 +58,7 @@ messages = [
 fact = ""
 topics, importances, valences = [], [], []
 for idx_memory in range(num_memories):
-    print(f">>> Creating content for memory {idx_memory+1}/{num_memories} ...")
+    logger.info(f"Creating content for memory {idx_memory+1}/{num_memories} ...")
     importance = 0 if idx_memory == 0 else patient_maker_utils.get_importance(fact, classifier, 1, 1)
     importance_likert = 0 if idx_memory == 0 else 1 + int(np.round(4 * importance))
     openai_response = maker.client.chat.completions.create(
@@ -87,13 +92,13 @@ for idx_memory in range(num_memories):
 
     importances.append(np.round(importance, 3))
     valences.append(np.round(s3d.get_utterance_sentiment(fact)["valence"], 3))
-print(">>> Finished!")
+logger.info("Finished!")
 
 memories = patient_maker_utils.combine_topic_memories(messages, topics, valences, importances)
 
 
 # %% Avatar
-print(">>> Creating avatar for the patient ...")
+logger.info("Creating avatar for the patient ...")
 skin_colors = patient_maker_utils.get_skin_colors()
 skin_color = random.choice(skin_colors)
 random_color = "#" + "".join([hex(random.randint(0, 256))[2:].rjust(2, "0") for _ in range(3)])
@@ -118,7 +123,7 @@ avatar = (
 
 
 # %% Saving
-print(">>> Saving patient persona ...")
+logger.info("Saving patient persona ...")
 persona = {
     "id": patient_name.lower(),
     "name": patient_name,
@@ -133,4 +138,4 @@ persona = {
 }
 
 patient_maker_utils.save_persona(persona)
-print(">>> Success!")
+logger.info("Success!")

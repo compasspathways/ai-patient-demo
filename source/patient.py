@@ -1,3 +1,4 @@
+import logging
 import os
 import re
 from typing import List
@@ -7,6 +8,8 @@ import openai
 from tqdm import tqdm
 
 from . import patient_utils
+
+logger = logging.getLogger("ai-patient")
 
 COMPLETION_TOKENS = int(os.getenv("COMPLETION_TOKENS", 500))
 CONTEXT_WINDOW = int(os.getenv("CONTEXT_WINDOW", 4097))
@@ -42,7 +45,7 @@ class Patient:
             self.context_window, self.completion_tokens
         )
 
-        print(">>> Populating memories ...")
+        logger.info("Populating memories ...")
         self.memories = {}
         for memory in tqdm(persona.get("memories", {})):
             patient_memory = {k: memory[k] for k in ("content", "embed")}
@@ -86,9 +89,9 @@ class Patient:
 
     def _trim(self, messages: List[dict]):
         if patient_utils.get_messages_size(messages) + self.completion_tokens - self.context_window > 0:
-            print("Emergency messages trimming triggered.")
+            logger.warning("Emergency messages trimming triggered ...")
         while patient_utils.get_messages_size(messages) + self.completion_tokens - self.context_window > 0:
-            print(patient_utils.get_messages_size(messages))
+            logger.info(f"messages size: {patient_utils.get_messages_size(messages)}")
 
             # if there's a system prompt and dialog, remove dialog first
             if messages[0]["role"] == "system" and len(messages) > 1:
@@ -133,7 +136,7 @@ class Patient:
         return messages
 
     def _llm_call(self, messages: List[dict]) -> str:
-        print(
+        logger.info(
             "\n*** START LLM CALL ***\n"
             + "\n".join([f"{message['role']}: {message['content']}" for message in messages])
             + "\n*** END LLM CALL ***\n"
