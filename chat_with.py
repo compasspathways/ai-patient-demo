@@ -11,6 +11,7 @@ from source.patient import Patient
 logger = logging.getLogger("ai-patient")
 logger.info("Starting AI Patient ...")
 
+therapist_name = "Dr. Mario"
 patient_id = sys.argv[1]
 
 try:
@@ -32,7 +33,7 @@ initial_conversation[0]["content"] = initial_conversation[0]["content"].replace(
     "[PATIENT_NAME]", patient_persona["name"]
 )
 
-patient = Patient(patient_persona, prompts, initial_conversation)
+patient = Patient(patient_persona, prompts, initial_conversation, therapist_name)
 
 
 def patient_response(message, history):

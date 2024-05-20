@@ -18,11 +18,13 @@ TOP_RELEVANT_MEMORIES_TO_FETCH = int(os.getenv("TOP_RELEVANT_MEMORIES_TO_FETCH",
 
 
 class Patient:
-    def __init__(self, persona: dict, prompts: dict, initial_conversation: List[dict]):
+
+    def __init__(self, persona: dict, prompts: dict, initial_conversation: List[dict], therapist_name: str):
         self.persona_id = persona["id"]
         self.persona_name = persona["name"]
         self.summary = persona["definition"]["summary"]
         self.personality = persona["definition"]["personality"]
+        self.therapist_name = therapist_name
 
         self.prompts = prompts
         self.conversation = initial_conversation
