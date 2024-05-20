@@ -31,7 +31,7 @@ class Patient:
         self.conversation_summary = None
         self.steps_to_reflection = STEPS_TO_REFLECTION
         self.topics = {}
-        self.conversation_lines_forgotten = 0
+        self.oldest_talk_turn_to_remember = 0
         self.num_valence_reflections = 0
         self.num_importance_reflections = 0
 
@@ -106,19 +106,27 @@ class Patient:
         return messages
 
     def _recall_conversation(self):
-        old_conversation = [self.conversation[self.conversation_lines_forgotten]]
+        old_conversation = [self.conversation[self.oldest_talk_turn_to_remember]]
 
         while (
             patient_utils.get_messages_size(old_conversation) < self.tokens_to_summarize
-            and self.conversation_lines_forgotten < len(self.conversation) - 2
+            and self.oldest_talk_turn_to_remember < len(self.conversation) - 2
         ):
-            self.conversation_lines_forgotten += 1
-            old_conversation.append(self.conversation[self.conversation_lines_forgotten])
+            self.oldest_talk_turn_to_remember += 1
+            old_conversation.append(self.conversation[self.oldest_talk_turn_to_remember])
+            logger.debug(
+                "Updated `oldest_talk_turn_to_remember` to: "
+                f"{self.oldest_talk_turn_to_remember}/{len(self.conversation)}"
+            )
 
-        # ensure the conversation ends with what the agent last said
+        # Ensure the conversation ends with what the agent last said
         if old_conversation[-1]["role"] != "assistant":
-            self.conversation_lines_forgotten += 1
-            old_conversation.append(self.conversation[self.conversation_lines_forgotten])
+            self.oldest_talk_turn_to_remember += 1
+            old_conversation.append(self.conversation[self.oldest_talk_turn_to_remember])
+            logger.debug(
+                "Updated `oldest_talk_turn_to_remember` to: "
+                f"{self.oldest_talk_turn_to_remember}/{len(self.conversation)}"
+            )
         return old_conversation
 
     def _summary_messages(self):
@@ -128,10 +136,12 @@ class Patient:
             system_prompt += self.prompts["summarize"]["previous_summary"]
 
         old_conversation = self._recall_conversation()
-        oc_string = "\n".join([f"{t['actor'].upper()}:\t{t['content']}" for t in old_conversation])
+        old_conversation = "\n".join(
+            [f"{talk_turn['role'].upper()}:\t{talk_turn['content']}" for talk_turn in old_conversation]
+        )
 
         system_prompt += self.prompts["summarize"]["command"]
-        system_prompt = self._parse(system_prompt, {"OLD_CONVERSATION": oc_string})
+        system_prompt = self._parse(system_prompt, {"OLD_CONVERSATION": old_conversation})
 
         messages = [{"role": "system", "content": system_prompt}]
 
@@ -151,19 +161,22 @@ class Patient:
 
     def _summarize(self):
         if (
-            patient_utils.get_messages_size(self.conversation[self.conversation_lines_forgotten :])
+            patient_utils.get_messages_size(self.conversation[self.oldest_talk_turn_to_remember :])
             > self.tokens_to_trigger_summary
         ):
+            logger.info("Summarization is triggered ... ")
             messages = self._summary_messages()
             messages = self._trim(messages)
 
+            logger.info("This is an intermediate llm call for summarizing the old conversation:")
             self.conversation_summary = self._llm_call(messages)
 
+            logger.info(f"Creating summary memory with following content: \n {self.conversation_summary}")
             self.memories[self.conversation_summary] = {
                 "embed": self.conversation_summary,
                 "embedding": self._get_embedding(self.conversation_summary),
                 "content": self.conversation_summary,
-                "metadata": {"type": "summary"},
+                "is_summary": True,
             }
 
     def _get_mood(self, topics, entailments):
@@ -272,7 +285,7 @@ class Patient:
         system_prompt, metadata = self._topical_prompt(topics, entailments)
 
         messages = [{"role": "system", "content": system_prompt}] + self.conversation[
-            self.conversation_lines_forgotten :
+            self.oldest_talk_turn_to_remember :
         ]
 
         return messages, metadata
@@ -290,8 +303,8 @@ class Patient:
         conversation_string = (
             "\n".join(
                 [
-                    f"{t['actor'].upper()}:\t{t['content']}"
-                    for t in self.conversation[self.conversation_lines_forgotten :]
+                    f"{talk_turn['role'].upper()}:\t{talk_turn['content']}"
+                    for talk_turn in self.conversation[self.oldest_talk_turn_to_remember :]
                 ]
             )
             + "\n"
@@ -365,12 +378,14 @@ class Patient:
             [
                 abs(float(self.memories[memory]["valence"]) - float(self.memories[memory]["valence_belief"]))
                 for memory in self.memories
+                if not self.memories[memory].get("is_summary", False)
             ]
         )
         importance_cap = np.mean(
             [
                 float(self.memories[memory]["importance"]) - float(self.memories[memory]["importance_belief"])
                 for memory in self.memories
+                if not self.memories[memory].get("is_summary", False)
             ]
         )
 
