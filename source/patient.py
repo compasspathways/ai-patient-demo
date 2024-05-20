@@ -182,6 +182,8 @@ class Patient:
     def _get_mood(self, topics, entailments):
         valence_beliefs, importance_beliefs = [], []
         for topic in topics:
+            if self.memories[topic].get("is_summary", False):
+                continue
             valence = self.memories[topic]["valence_belief"]
             importance = self.memories[topic]["importance_belief"]
             if topic in self.topics:
@@ -311,8 +313,7 @@ class Patient:
         )
 
         system_prompt += self._parse(
-            self.prompts["reflect"]["conversation"],
-            {"CONVERSATION": conversation_string},
+            self.prompts["reflect"]["conversation"], {"CONVERSATION": conversation_string}
         )
 
         system_prompt += self.prompts["reflect"]["topics"]
