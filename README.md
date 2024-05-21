@@ -10,7 +10,7 @@ This repository is the official implementation of "Building virtual patients for
     source venv-demo/bin/activate
     pip install -r requirements.txt
     ```
-
+    Note: The installation is tested with Python 3.11.1 on MacBookPro M3 Max with 64 GB Ram
 2. #### Configure the environment variables
     - `cp .env_sample .env`
     - Fill up the required variables (e.g. your openai api key) in the `.env` file
