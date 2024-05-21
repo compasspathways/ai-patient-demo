@@ -8,6 +8,7 @@ import sentence_transformers
 
 EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "BAAI/bge-large-en-v1.5")
 MESSAGE_PAD_TOKENS = int(os.getenv("MESSAGE_PAD_TOKENS", 3))
+TOKENS_TO_TRIGGER_SUMMARY = int(os.getenv("TOKENS_TO_TRIGGER_SUMMARY", 150))
 WORD_TO_TOKEN_RATIO = 1.5
 
 
@@ -23,8 +24,7 @@ def get_messages_size(messages: List[dict]) -> int:
 
 
 def get_tokens_to_trigger_summary(context_window: int, completion_tokens: int) -> int:
-    # TODO
-    return 100  # min(int(0.9 * context_window), context_window - completion_tokens)
+    return min(int(0.9 * context_window), context_window - completion_tokens, TOKENS_TO_TRIGGER_SUMMARY)
 
 
 def xml(input: str, tag: str) -> str:
