@@ -13,7 +13,7 @@ logger = logging.getLogger("ai-patient")
 
 COMPLETION_TOKENS = int(os.getenv("COMPLETION_TOKENS", 500))
 CONTEXT_WINDOW = int(os.getenv("CONTEXT_WINDOW", 4097))
-STEPS_TO_REFLECTION = 2  # int(os.getenv("STEPS_TO_REFLECTION", 6))
+STEPS_TO_REFLECTION = 1  # int(os.getenv("STEPS_TO_REFLECTION", 6)) #TODO
 TOP_RELEVANT_MEMORIES_TO_FETCH = int(os.getenv("TOP_RELEVANT_MEMORIES_TO_FETCH", 5))
 
 
@@ -56,23 +56,21 @@ class Patient:
             patient_memory["embedding"] = self._get_embedding(memory["embed"])
             self.memories[memory["embed"]] = patient_memory
 
-    def _swap_role(self, role: str) -> str:
-        return self.therapist_name if role == "user" else self.persona_name
+    def _rename_role(self, role: str) -> str:
+        return self.therapist_name if role == "user" else "You"
 
     def _get_embedding(self, text: str) -> np.ndarray:
         embeddings = self.embedding_model.encode(text, show_progress_bar=False, normalize_embeddings=True)
         return embeddings.astype(np.float64)
 
-    def _parse(self, text: str, subs: dict = None, pattern=r"\{([^}]+)\}") -> str:
-        subs_base = {k.upper(): v for k, v in self.__dict__.items()}
-        if subs is None:
-            subs = subs_base
-        else:
-            subs.update(subs_base)
+    def _parse(self, text: str, substitutes: dict = None, pattern=r"\{([^}]+)\}") -> str:
+        substitutes_base = {k.upper(): v for k, v in self.__dict__.items()}
+        if substitutes is not None:
+            substitutes_base.update(substitutes)
 
         def replace(match):
             key = match.group(1)
-            return str(subs.get(key, match.group(0)))
+            return str(substitutes_base.get(key, match.group(0)))
 
         return re.sub(pattern, replace, text)
 
@@ -145,7 +143,7 @@ class Patient:
             {
                 "OLD_CONVERSATION": "\n".join(
                     [
-                        f"{self._swap_role(talk_turn['role'])}:\t{talk_turn['content']}"
+                        f"{self._rename_role(talk_turn['role'])}:\t{talk_turn['content']}"
                         for talk_turn in self._recall_conversation()
                     ]
                 )
@@ -159,7 +157,7 @@ class Patient:
     def _llm_call(self, messages: List[dict]) -> str:
         logger.info(
             "Information sent to the LLM:"
-            + "\n*** START LLM CALL ***\n"
+            + "\n*** START LLM CALL ***\n\n"
             + "\n".join([f"{message['role']}: {message['content']}" for message in messages])
             + "\n*** END LLM CALL ***\n"
         )
@@ -315,9 +313,10 @@ class Patient:
         system_prompt = system_prompt + self._parse(self.prompts["reflect"]["preamble"])
 
         conversation_string = (
-            "\n".join(
+            "\n"
+            + "\n".join(
                 [
-                    f"{self._swap_role(talk_turn['role'])}:\t{talk_turn['content']}"
+                    f"{self._rename_role(talk_turn['role'])}:\t{talk_turn['content']}"
                     for talk_turn in self.conversation[self.oldest_talk_turn_to_remember :]
                 ]
             )

@@ -23,6 +23,7 @@ def get_messages_size(messages: List[dict]) -> int:
 
 
 def get_tokens_to_trigger_summary(context_window: int, completion_tokens: int) -> int:
+    # TODO
     return 100  # min(int(0.9 * context_window), context_window - completion_tokens)
 
 

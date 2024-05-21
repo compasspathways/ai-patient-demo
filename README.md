@@ -18,6 +18,7 @@ This repository is the official implementation of "Building virtual patients for
     ```bash
     python chat_with.py leilani
     ```
+    - Note: You will see a url printed on the console; open that link and chat with your patient!
 
 ## Make Your Own Patient in One Step
 ```bash

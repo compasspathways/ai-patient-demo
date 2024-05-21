@@ -26,6 +26,7 @@ reflect:
     You have changed your mind pretty substantially in this conversation, and you'd like to reflect on what you've learned.
   conversation: >
     The following is the conversation you've had so far:
+
     {CONVERSATION}
   topics: >
     That concludes your conversation. The following are the topics that you've changed your mind about, and a factual sentence on each topic. Each sentence will have a _valence_ and _importance_.
