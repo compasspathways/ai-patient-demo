@@ -26,11 +26,11 @@ def get_tokens_to_trigger_summary(context_window: int, completion_tokens: int) -
     return 100  # min(int(0.9 * context_window), context_window - completion_tokens)
 
 
-def xml(input: str, tag: str):
+def xml(input: str, tag: str) -> str:
     return f"<{tag}>{input}</{tag}>"
 
 
-def get_root_dir():
+def get_root_dir() -> pathlib.Path:
     return pathlib.Path(__file__).parent.parent
 
 
@@ -45,7 +45,7 @@ def get_sentences(text: str, pattern=r"([^.!?]+)([.!?]+[\s]*)") -> list:
     return [m[0] + m[1] for m in matches]
 
 
-def excise_middle_sentence(text: str, sep: str = " "):
+def excise_middle_sentence(text: str, sep: str = " ") -> str:
     sentences = get_sentences(text)
     sentences.pop(len(sentences) // 2)
     return sep.join(sentences)

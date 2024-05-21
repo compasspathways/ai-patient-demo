@@ -1,9 +1,9 @@
 import logging
-import os
 import pathlib
 import re
 import warnings
 from types import MethodType
+from typing import Any, List
 
 import numpy as np
 import torch
@@ -14,7 +14,7 @@ from transformers import pipeline
 logger = logging.getLogger("ai-patient")
 
 
-def get_root_dir():
+def get_root_dir() -> pathlib.Path:
     return pathlib.Path(__file__).parent.parent
 
 
@@ -69,32 +69,25 @@ def get_classifier():
     return classifier
 
 
-def parse(string, subs=None, pattern=r"\{([^}]+)\}"):
+def parse(text: str, subs: dict = None, pattern=r"\{([^}]+)\}") -> str:
     subs = {k.upper(): v for k, v in subs.items()}
 
     def replace(match):
         key = match.group(1)
         return str(subs.get(key, match.group(0)))
 
-    return re.sub(pattern, replace, string)
+    return re.sub(pattern, replace, text)
 
 
-def xml(message: str, tag: str):
-    return f"<{tag.upper()}>{message}</{tag.upper()}>"
+def xml(message: str, tag: str) -> str:
+    return f"<{tag}>{message}</{tag}>"
 
 
-def get_prompts():
+def get_prompts() -> dict:
     prompts_path = get_root_dir() / "prompts" / "make.yaml"
     with open(prompts_path, "r") as file:
         prompts = yaml.safe_load(file)
     return prompts
-
-
-def get_persona(id: str):
-    persona_path = get_root_dir() / "patients" / id / ".yaml"
-    with open(persona_path, "r") as file:
-        persona = yaml.safe_load(file)
-    return persona
 
 
 def save_persona(persona: dict):
@@ -103,26 +96,9 @@ def save_persona(persona: dict):
         file.write(yaml.safe_dump(persona, sort_keys=False))
 
 
-def get_personas():
-    personas_path = get_root_dir() / "patients"
-    return [persona.split(".yaml")[0] for persona in os.listdir(personas_path)]
-
-
-def hlin(start_hex, stop_hex, num):
-    start = int(start_hex, 16)
-    stop = int(stop_hex, 16)
-    rang = np.linspace(start, stop, num)
-    rang = [hex(int(r))[2:].rjust(2, "0") for r in rang]
-    return rang
-
-
-def hlin3(start, stop, num):
-    tuples = list(zip(*[hlin(start[i : i + 2], stop[i : i + 2], num) for i in range(0, len(start), 2)]))
-    hexes = ["".join(r) for r in tuples]
-    return hexes
-
-
-def make_system_prompt(persona: dict, prompts: dict, messages, personality, summary, activity=None):
+def make_system_prompt(
+    persona: dict, prompts: dict, messages: List[dict], personality: str, summary: str, activity: str = None
+) -> List[dict]:
     qa = "\n".join([f'Q: {m["type"]}; A: {m["content"]}' for m in persona["memories"]])
     system_prompt = parse(
         prompts["make_intention"],
@@ -142,7 +118,7 @@ def make_system_prompt(persona: dict, prompts: dict, messages, personality, summ
     return [{"role": "system", "content": system_prompt}] + messages[1:]
 
 
-def get_importance(input: str, classifier, noise_mean=0, noise_sd=0):
+def get_importance(text: str, classifier: Any, noise_mean: float = 0, noise_sd: float = 0) -> float:
     importance_strings = [
         "psychologically clinically important",
         "psychologically clinically critical",
@@ -154,12 +130,12 @@ def get_importance(input: str, classifier, noise_mean=0, noise_sd=0):
 
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
-        inference = classifier([input], importance_strings)
+        inference = classifier([text], importance_strings)
         noise = np.random.normal(noise_mean, noise_sd, 1)
     return [expit(np.mean(i["entail_logits"]) + noise) for i in inference][0][0]
 
 
-def biographer(maker, importance_likert, prompts):
+def biographer(maker: Any, importance_likert: str, prompts: dict) -> List[dict]:
     contents = [f'{prompts["ask_question"]}\n\n{prompts["question_importance"][importance_likert]}'] + [
         message["content"] for message in maker.messages[1:]
     ]
@@ -169,7 +145,7 @@ def biographer(maker, importance_likert, prompts):
     return [{"role": role, "content": content} for role, content in zip(roles, contents)]
 
 
-def combine_topic_memories(messages, topics, valences, importances):
+def combine_topic_memories(messages: List[dict], topics: list, valences: list, importances: list) -> List[dict]:
     valence_beliefs = expit(logit((np.array(valences) + 1) / 2) + np.random.normal(0, 1, len(valences))) * 2 - 1
     importance_beliefs = np.array([np.random.uniform(0, i, 1)[0] for i in importances])
     memories = [
@@ -189,7 +165,21 @@ def combine_topic_memories(messages, topics, valences, importances):
     return memories
 
 
-def get_skin_colors(top=("fce5b8", "f7d088"), bottom=("b3a789", "0d0800"), num=20):
+def hlin(start_hex, stop_hex, num):
+    start = int(start_hex, 16)
+    stop = int(stop_hex, 16)
+    rang = np.linspace(start, stop, num)
+    rang = [hex(int(r))[2:].rjust(2, "0") for r in rang]
+    return rang
+
+
+def hlin3(start, stop, num):
+    tuples = list(zip(*[hlin(start[i : i + 2], stop[i : i + 2], num) for i in range(0, len(start), 2)]))
+    hexes = ["".join(r) for r in tuples]
+    return hexes
+
+
+def get_skin_colors(top=("fce5b8", "f7d088"), bottom=("b3a789", "0d0800"), num=20) -> list:
     tops = hlin3(*top, num)
     bottoms = hlin3(*bottom, num)
     grid = list(zip(*[hlin3(t, b, num) for t, b in zip(tops, bottoms)]))
