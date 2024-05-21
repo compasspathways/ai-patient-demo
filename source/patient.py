@@ -28,6 +28,7 @@ class Patient:
 
         self.prompts = prompts
         self.conversation = initial_conversation
+        self.conversation_metadata = [{}] * len(initial_conversation)
         self.conversation_summary = None
         self.steps_to_reflection = STEPS_TO_REFLECTION
         self.topics = {}
@@ -149,7 +150,8 @@ class Patient:
 
     def _llm_call(self, messages: List[dict]) -> str:
         logger.info(
-            "\n*** START LLM CALL ***\n"
+            "Information sent to the LLM:"
+            + "\n*** START LLM CALL ***\n"
             + "\n".join([f"{message['role']}: {message['content']}" for message in messages])
             + "\n*** END LLM CALL ***\n"
         )
@@ -177,13 +179,12 @@ class Patient:
                 "embedding": self._get_embedding(self.conversation_summary),
                 "content": self.conversation_summary,
                 "is_summary": True,
+                **self.conversation_metadata[-1],
             }
 
     def _get_mood(self, topics, entailments):
         valence_beliefs, importance_beliefs = [], []
         for topic in topics:
-            if self.memories[topic].get("is_summary", False):
-                continue
             valence = self.memories[topic]["valence_belief"]
             importance = self.memories[topic]["importance_belief"]
             if topic in self.topics:
@@ -271,11 +272,13 @@ class Patient:
 
         metadata = {
             "topic": top_topic,
-            "General Mood": mood,
-            "Perceived Valence": self.memories[top_topic]["valence_belief"] + valence_delta,
-            "True Valence": self.memories[top_topic]["valence_belief"],
-            "Perceived Importance": self.memories[top_topic]["importance_belief"] + importance_delta,
-            "True Importance": self.memories[top_topic]["importance_belief"],
+            "mood": mood,
+            "perceived_valence": self.memories[top_topic]["valence_belief"] + valence_delta,
+            "valence_belief": self.memories[top_topic]["valence_belief"],
+            "valence": self.memories[top_topic]["valence"],
+            "perceived_importance": self.memories[top_topic]["importance_belief"] + importance_delta,
+            "importance_belief": self.memories[top_topic]["importance_belief"],
+            "importance": self.memories[top_topic]["importance"],
         }
 
         return system_prompt, metadata
@@ -293,6 +296,7 @@ class Patient:
         return messages, metadata
 
     def _reflection_messages(self, top_n: int = 2):
+        logger.info("Reflection is triggered ...")
         system_prompt = self._parse(self.prompts["system_preamble"]) + patient_utils.xml(
             self.personality, "personality"
         )
@@ -411,10 +415,15 @@ class Patient:
 
     def response(self, message):
         self.conversation.append({"role": "user", "content": message})
+
         self._summarize()
+
         messages, metadata = self._response_messages()
+
         messages = self._trim(messages)
         response = self._llm_call(messages)
+
         self.conversation.append({"role": "assistant", "content": response})
+        self.conversation_metadata.append(metadata)
 
         return response, messages, metadata
