@@ -10,8 +10,8 @@ This repository is the official implementation of "Building virtual patients for
     source venv-demo/bin/activate
     pip install -r requirements.txt
     ```
-    Note 2: Make sure your python version is > 3.10.0
-    Note 1: The installation is tested with Python 3.11.1 on MacBookPro M3 Max with 64 GB RAM
+    Note 1: Make sure your python version is > 3.10.0
+    Note 2: The installation is tested with Python 3.11.1 on MacBookPro M3 Max with 64 GB RAM
 
 2. #### Configure the environment variables
     - `cp .env_sample .env`
