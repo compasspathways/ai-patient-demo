@@ -1,0 +1,10 @@
+cache
+
+__pycache__
+
+.env
+
+venv*
+*.ipynb
+
+tmp.py
