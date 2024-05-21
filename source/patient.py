@@ -290,7 +290,10 @@ class Patient:
         return system_prompt, metadata
 
     def _topic_messages(self) -> Tuple[List[dict], dict]:
-        embedding_vector = self._get_embedding(self.conversation[-1]["content"])
+        context = " ".join([talk_turn["content"] for talk_turn in self.conversation[-3:]])
+
+        embedding_vector = self._get_embedding(context)
+
         topics, entailments = self._get_top_memories(embedding_vector)
 
         system_prompt, metadata = self._topical_prompt(topics, entailments)
