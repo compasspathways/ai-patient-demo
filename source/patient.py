@@ -1,7 +1,7 @@
 import logging
 import os
 import re
-from typing import List
+from typing import List, Tuple
 
 import numpy as np
 import openai
@@ -13,7 +13,7 @@ logger = logging.getLogger("ai-patient")
 
 COMPLETION_TOKENS = int(os.getenv("COMPLETION_TOKENS", 500))
 CONTEXT_WINDOW = int(os.getenv("CONTEXT_WINDOW", 4097))
-STEPS_TO_REFLECTION = int(os.getenv("STEPS_TO_REFLECTION", 6))
+STEPS_TO_REFLECTION = 2  # int(os.getenv("STEPS_TO_REFLECTION", 6))
 TOP_RELEVANT_MEMORIES_TO_FETCH = int(os.getenv("TOP_RELEVANT_MEMORIES_TO_FETCH", 5))
 
 
@@ -56,11 +56,14 @@ class Patient:
             patient_memory["embedding"] = self._get_embedding(memory["embed"])
             self.memories[memory["embed"]] = patient_memory
 
+    def _swap_role(self, role: str) -> str:
+        return self.therapist_name if role == "user" else self.persona_name
+
     def _get_embedding(self, text: str) -> np.ndarray:
         embeddings = self.embedding_model.encode(text, show_progress_bar=False, normalize_embeddings=True)
         return embeddings.astype(np.float64)
 
-    def _parse(self, text: str, subs: dict = None, pattern=r"\{([^}]+)\}"):
+    def _parse(self, text: str, subs: dict = None, pattern=r"\{([^}]+)\}") -> str:
         subs_base = {k.upper(): v for k, v in self.__dict__.items()}
         if subs is None:
             subs = subs_base
@@ -73,7 +76,7 @@ class Patient:
 
         return re.sub(pattern, replace, text)
 
-    def _get_top_memories(self, embedding_vector: np.ndarray) -> tuple:
+    def _get_top_memories(self, embedding_vector: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         embeddings = np.array([memory["embedding"] for memory in self.memories.values()])
         distances = np.linalg.norm(np.array(embeddings) - np.array(embedding_vector), axis=1)
 
@@ -90,7 +93,7 @@ class Patient:
 
         return memory_contents, entailments
 
-    def _trim(self, messages: List[dict]):
+    def _trim(self, messages: List[dict]) -> List[dict]:
         if patient_utils.get_messages_size(messages) + self.completion_tokens - self.context_window > 0:
             logger.warning("Emergency messages trimming triggered ...")
         while patient_utils.get_messages_size(messages) + self.completion_tokens - self.context_window > 0:
@@ -106,7 +109,7 @@ class Patient:
                 messages[0]["content"] = patient_utils.excise_middle_sentence(messages[0]["content"])
         return messages
 
-    def _recall_conversation(self):
+    def _recall_conversation(self) -> List[dict]:
         old_conversation = [self.conversation[self.oldest_talk_turn_to_remember]]
 
         while (
@@ -130,19 +133,24 @@ class Patient:
             )
         return old_conversation
 
-    def _summary_messages(self):
+    def _summary_messages(self) -> List[dict]:
         system_prompt = self.prompts["system_preamble"]
 
         if self.conversation_summary is not None:
             system_prompt += self.prompts["summarize"]["previous_summary"]
 
-        old_conversation = self._recall_conversation()
-        old_conversation = "\n".join(
-            [f"{talk_turn['role'].upper()}:\t{talk_turn['content']}" for talk_turn in old_conversation]
-        )
-
         system_prompt += self.prompts["summarize"]["command"]
-        system_prompt = self._parse(system_prompt, {"OLD_CONVERSATION": old_conversation})
+        system_prompt = self._parse(
+            system_prompt,
+            {
+                "OLD_CONVERSATION": "\n".join(
+                    [
+                        f"{self._swap_role(talk_turn['role'])}:\t{talk_turn['content']}"
+                        for talk_turn in self._recall_conversation()
+                    ]
+                )
+            },
+        )
 
         messages = [{"role": "system", "content": system_prompt}]
 
@@ -182,7 +190,7 @@ class Patient:
                 **self.conversation_metadata[-1],
             }
 
-    def _get_mood(self, topics, entailments):
+    def _get_mood(self, topics: np.ndarray, entailments: np.ndarray) -> float:
         valence_beliefs, importance_beliefs = [], []
         for topic in topics:
             valence = self.memories[topic]["valence_belief"]
@@ -202,7 +210,7 @@ class Patient:
 
         return mood
 
-    def _topic_content(self, topic, mood):
+    def _topic_content(self, topic: str, mood: float) -> str:
         mood_likert = np.round((mood + 1) * 5).astype(int)
         importance_likert = np.round(self.memories[topic]["importance_belief"] * 5).astype(int)
 
@@ -220,7 +228,7 @@ class Patient:
 
         return topic_content
 
-    def _topical_system_prompt(self, topical_content, verbosity):
+    def _topical_system_prompt(self, topical_content: str, verbosity: int) -> str:
         system_prompt = (
             patient_utils.xml(self.prompts["system_preamble"], "preamble")
             + patient_utils.xml(self.summary, "bio")
@@ -256,12 +264,12 @@ class Patient:
 
         return valence_delta, importance_delta
 
-    def _get_verbosity(self, topic):
+    def _get_verbosity(self, topic: str) -> int:
         # the system prompt will say to produce no more than 8-25 tokens, depending on perceived importance
         perception = self.memories[topic]["importance_belief"] + self.topics[topic]["importance_delta"]
         return int(np.round(perception * 27 + 8))
 
-    def _topical_prompt(self, topics, entailments):
+    def _topical_prompt(self, topics: np.ndarray, entailments: np.ndarray) -> Tuple[str, dict]:
         top_topic = topics[np.argmax(entailments)]
         valence_delta, importance_delta = self._update_topic_state(top_topic)
 
@@ -283,7 +291,7 @@ class Patient:
 
         return system_prompt, metadata
 
-    def _topic_messages(self):
+    def _topic_messages(self) -> Tuple[List[dict], dict]:
         embedding_vector = self._get_embedding(self.conversation[-1]["content"])
         topics, entailments = self._get_top_memories(embedding_vector)
 
@@ -295,7 +303,7 @@ class Patient:
 
         return messages, metadata
 
-    def _reflection_messages(self, top_n: int = 2):
+    def _reflection_messages(self, top_n: int = 2) -> Tuple[List[dict], dict]:
         logger.info("Reflection is triggered ...")
         system_prompt = self._parse(self.prompts["system_preamble"]) + patient_utils.xml(
             self.personality, "personality"
@@ -309,7 +317,7 @@ class Patient:
         conversation_string = (
             "\n".join(
                 [
-                    f"{talk_turn['role'].upper()}:\t{talk_turn['content']}"
+                    f"{self._swap_role(talk_turn['role'])}:\t{talk_turn['content']}"
                     for talk_turn in self.conversation[self.oldest_talk_turn_to_remember :]
                 ]
             )
@@ -375,7 +383,7 @@ class Patient:
 
         return messages, metadata
 
-    def _check_to_reflect(self):
+    def _check_to_reflect(self) -> bool:
         valence_deltas = np.array([topic["valence_delta"] for topic in self.topics.values()])
         importance_deltas = np.array([topic["importance_delta"] for topic in self.topics.values()])
 
@@ -409,11 +417,11 @@ class Patient:
 
         return self.reflect_valence or self.reflect_importance
 
-    def _response_messages(self):
+    def _response_messages(self) -> Tuple[List[dict], dict]:
         messages, metadata = self._reflection_messages() if self._check_to_reflect() else self._topic_messages()
         return messages, metadata
 
-    def response(self, message):
+    def response(self, message: str) -> Tuple[str, List[dict], dict]:
         self.conversation.append({"role": "user", "content": message})
 
         self._summarize()
