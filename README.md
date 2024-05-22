@@ -10,11 +10,13 @@ This repository is the official implementation of "Building virtual patients for
     source venv-demo/bin/activate
     pip install -r requirements.txt
     ```
-    Note 1: Make sure your python version is > 3.10.0
-    Note 2: The installation is tested with Python 3.11.1 on MacBookPro M3 Max with 64 GB RAM
+    **Note 1:** Make sure your python version is > 3.10.0 <br>
+    **Note 2:** The installation is successfully tested with:
+    - Python 3.11.1 on MacBookPro 2023 M3 Max with 64 GB RAM (Sonoma 14.5)
+    - Python 3.11.5 on MacBookPro 2019 with 16 GB RAM (Monterey 12.7.4)
 
 2. #### Configure the environment variables
-    - `cp .env_sample .env`
+    - `cp env_sample .env`
     - Fill up the required variables (e.g. your openai api key) in the `.env` file
 3. #### Run the app
     ```bash
@@ -26,8 +28,10 @@ This repository is the official implementation of "Building virtual patients for
 ```bash
 python make_patient.py
 ```
+This will create a patient with a random name and realistic memories and back stories in `patients` folder. The intake form will be in `forms` folder.
+You can edit the fields of the yaml file in the `patients` folder and talk to the newly created patient with `python chat_with.py [patient_id]`
 
-## Results
+
 
 ## Contributing
 Any contribution to the code that improves the quality of chat with the patients or improves the performance is highly appreciated 🙏
