@@ -13,7 +13,7 @@ logger = logging.getLogger("ai-patient")
 
 COMPLETION_TOKENS = int(os.getenv("COMPLETION_TOKENS", 500))
 CONTEXT_WINDOW = int(os.getenv("CONTEXT_WINDOW", 4097))
-STEPS_TO_REFLECTION = 1  # int(os.getenv("STEPS_TO_REFLECTION", 6)) #TODO
+STEPS_TO_REFLECTION = int(os.getenv("STEPS_TO_REFLECTION", 2))
 TOP_RELEVANT_MEMORIES_TO_FETCH = int(os.getenv("TOP_RELEVANT_MEMORIES_TO_FETCH", 5))
 
 
@@ -171,7 +171,7 @@ class Patient:
         if (
             patient_utils.get_messages_size(self.conversation[self.oldest_talk_turn_to_remember :])
             > self.tokens_to_trigger_summary
-        ):
+        ) and (self.conversation_metadata[-1] != {}):
             logger.info("Summarization is triggered ... ")
             messages = self._summary_messages()
             messages = self._trim(messages)
