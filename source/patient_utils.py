@@ -7,18 +7,17 @@ from typing import List
 import sentence_transformers
 
 EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "BAAI/bge-large-en-v1.5")
-MESSAGE_PAD_TOKENS = int(os.getenv("MESSAGE_PAD_TOKENS", 3))
 TOKENS_TO_TRIGGER_SUMMARY = int(os.getenv("TOKENS_TO_TRIGGER_SUMMARY", 150))
 WORD_TO_TOKEN_RATIO = 1.5
 
 
-def get_messages_size(messages: List[dict]) -> int:
+def get_messages_size(messages: List[dict], message_pad_tokens: int) -> int:
     num_tokens = 0
     for message in messages:
-        num_tokens += MESSAGE_PAD_TOKENS
+        num_tokens += message_pad_tokens
         for value in message.values():
             num_tokens += int(len(value.split()) * WORD_TO_TOKEN_RATIO)
-    num_tokens += MESSAGE_PAD_TOKENS
+    num_tokens += message_pad_tokens
 
     return num_tokens
 

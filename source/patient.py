@@ -11,34 +11,31 @@ from . import patient_utils
 
 logger = logging.getLogger("ai-patient")
 
-COMPLETION_TOKENS = int(os.getenv("COMPLETION_TOKENS", 500))
-CONTEXT_WINDOW = int(os.getenv("CONTEXT_WINDOW", 4097))
-STEPS_TO_REFLECTION = int(os.getenv("STEPS_TO_REFLECTION", 2))
-TOP_RELEVANT_MEMORIES_TO_FETCH = int(os.getenv("TOP_RELEVANT_MEMORIES_TO_FETCH", 5))
-
 
 class Patient:
 
     def __init__(self, persona: dict, prompts: dict, initial_conversation: List[dict], therapist_name: str):
         self.persona_id = persona["id"]
         self.persona_name = persona["name"]
-        self.summary = persona["definition"]["summary"]
-        self.personality = persona["definition"]["personality"]
+        self.summary = persona["summary"]
+        self.personality = persona["personality"]
         self.therapist_name = therapist_name
 
         self.prompts = prompts
         self.conversation = initial_conversation
         self.conversation_metadata = [{}] * len(initial_conversation)
         self.conversation_summary = None
-        self.steps_to_reflection = STEPS_TO_REFLECTION
+        self.steps_to_reflection = int(os.getenv("STEPS_TO_REFLECTION", 2))
+        self.top_memories_to_fetch = int(os.getenv("TOP_RELEVANT_MEMORIES_TO_FETCH", 5))
         self.topics = {}
         self.oldest_talk_turn_to_remember = 0
         self.num_valence_reflections = 0
         self.num_importance_reflections = 0
 
         self.model_name = persona["model_id"]
-        self.context_window = CONTEXT_WINDOW
-        self.completion_tokens = COMPLETION_TOKENS
+        self.context_window = persona["context_window"]
+        self.completion_tokens = persona["completion_tokens"]
+        self.message_pad_tokens = persona["message_pad_tokens"]
         self.api_client = openai.OpenAI()
         self.embedding_model = patient_utils.get_embedding_model()
 
@@ -78,7 +75,7 @@ class Patient:
         embeddings = np.array([memory["embedding"] for memory in self.memories.values()])
         distances = np.linalg.norm(np.array(embeddings) - np.array(embedding_vector), axis=1)
 
-        idxs = np.argpartition(distances, TOP_RELEVANT_MEMORIES_TO_FETCH)[:TOP_RELEVANT_MEMORIES_TO_FETCH]
+        idxs = np.argpartition(distances, self.top_memories_to_fetch)[: self.top_memories_to_fetch]
 
         top_memories_keys = np.array(list(self.memories.keys()))[idxs]
         top_memories = [
@@ -92,10 +89,20 @@ class Patient:
         return memory_contents, entailments
 
     def _trim(self, messages: List[dict]) -> List[dict]:
-        if patient_utils.get_messages_size(messages) + self.completion_tokens - self.context_window > 0:
+        if (
+            patient_utils.get_messages_size(messages, self.message_pad_tokens)
+            + self.completion_tokens
+            - self.context_window
+            > 0
+        ):
             logger.warning("Emergency messages trimming triggered ...")
-        while patient_utils.get_messages_size(messages) + self.completion_tokens - self.context_window > 0:
-            logger.info(f"messages size: {patient_utils.get_messages_size(messages)}")
+        while (
+            patient_utils.get_messages_size(messages, self.message_pad_tokens)
+            + self.completion_tokens
+            - self.context_window
+            > 0
+        ):
+            logger.info(f"messages size: {patient_utils.get_messages_size(messages, self.message_pad_tokens)}")
 
             # if there's a system prompt and dialog, remove dialog first
             if messages[0]["role"] == "system" and len(messages) > 1:
@@ -111,7 +118,7 @@ class Patient:
         old_conversation = [self.conversation[self.oldest_talk_turn_to_remember]]
 
         while (
-            patient_utils.get_messages_size(old_conversation) < self.tokens_to_summarize
+            patient_utils.get_messages_size(old_conversation, self.message_pad_tokens) < self.tokens_to_summarize
             and self.oldest_talk_turn_to_remember < len(self.conversation) - 2
         ):
             self.oldest_talk_turn_to_remember += 1
@@ -169,7 +176,9 @@ class Patient:
 
     def _summarize(self):
         if (
-            patient_utils.get_messages_size(self.conversation[self.oldest_talk_turn_to_remember :])
+            patient_utils.get_messages_size(
+                self.conversation[self.oldest_talk_turn_to_remember :], self.message_pad_tokens
+            )
             > self.tokens_to_trigger_summary
         ) and (self.conversation_metadata[-1] != {}):
             logger.info("Summarization is triggered ... ")

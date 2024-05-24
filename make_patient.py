@@ -1,12 +1,10 @@
 # %% Imports
 import logging
 import os
-import random
 import string
 import warnings
 
 import numpy as np
-import python_avatars as pa
 import sentiment3d
 
 from source import patient_maker, patient_maker_utils
@@ -97,43 +95,18 @@ logger.info("Finished!")
 memories = patient_maker_utils.combine_topic_memories(messages, topics, valences, importances)
 
 
-# %% Avatar
-logger.info("Creating avatar for the patient ...")
-skin_colors = patient_maker_utils.get_skin_colors()
-skin_color = random.choice(skin_colors)
-random_color = "#" + "".join([hex(random.randint(0, 256))[2:].rjust(2, "0") for _ in range(3)])
-
-avatar = (
-    pa.Avatar(
-        style=pa.AvatarStyle.CIRCLE,
-        background_color=pa.BackgroundColor.WHITE,
-        eyebrows=pa.EyebrowType.DEFAULT_NATURAL,
-        eyes=pa.EyeType.DEFAULT,
-        nose=pa.NoseType.DEFAULT,
-        mouth=pa.MouthType.SERIOUS,
-        facial_hair=pa.FacialHairType.NONE,
-        skin_color=skin_color,
-        accessory=pa.AccessoryType.NONE,
-        clothing=pa.ClothingType.SHIRT_SCOOP_NECK,
-        clothing_color=random_color,
-    )
-    .render()
-    .replace('width="264px" height="280px"', 'width="100%" height="100%"')
-)
-
-
 # %% Saving
 logger.info("Saving patient persona ...")
 persona = {
     "id": patient_name.lower(),
     "name": patient_name,
-    "model_id": maker.model,
-    "avatar": avatar,
+    "model_id": os.getenv("NEW_PATIENT_MODEL", "gpt-4-1106-preview"),
+    "context_window": int(os.getenv("NEW_PATIENT_MODEL_CONTEXT_WINDOW", 4097)),
+    "completion_tokens": int(os.getenv("NEW_PATIENT_MODEL_COMPLETION_TOKENS", 500)),
+    "message_pad_tokens": int(os.getenv("NEW_PATIENT_MODEL_MESSAGE_PAD_TOKENS", 3)),
     "description": description,
-    "definition": {
-        "summary": summary,
-        "personality": personality,
-    },
+    "summary": summary,
+    "personality": personality,
     "memories": memories,
 }
 

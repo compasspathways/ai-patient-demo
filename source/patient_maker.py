@@ -1,3 +1,5 @@
+import os
+
 import openai
 import tiktoken
 
@@ -8,7 +10,7 @@ class PatientMaker:
     def __init__(self):
         self.client = openai.OpenAI()
         self.messages = []
-        self.model = "gpt-4-1106-preview"
+        self.model = os.getenv("PATIENT_MAKER_MODEL", "gpt-4-1106-preview")
 
     def command(self, string: str) -> str:
         system_message = [{"role": "system", "content": string}]
