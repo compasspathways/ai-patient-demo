@@ -10,7 +10,7 @@ This repository is the official implementation of "Building virtual patients for
     source venv-demo/bin/activate
     pip install -r requirements.txt
     ```
-    **Note 1:** Make sure your python version is > 3.10.0 <br>
+    **Note 1:** Make sure your python version is 3.11 <br>
     **Note 2:** The installation is successfully tested with:
     - Python 3.11.1 on MacBookPro 2023 M3 Max with 64 GB RAM (Sonoma 14.5)
     - Python 3.11.5 on MacBookPro 2019 with 16 GB RAM (Monterey 12.7.4)
