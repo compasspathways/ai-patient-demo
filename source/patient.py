@@ -75,10 +75,16 @@ class Patient:
         return re.sub(pattern, replace, text)
 
     def _get_top_memories(self, embedding_vector: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
-        embeddings = np.array([memory["embedding"] for memory in self.memories.values()])
-        distances = np.linalg.norm(np.array(embeddings) - np.array(embedding_vector), axis=1)
 
-        idxs = np.argpartition(distances, TOP_RELEVANT_MEMORIES_TO_FETCH)[:TOP_RELEVANT_MEMORIES_TO_FETCH]
+        non_summary_memories = {
+            key: memory for key, memory in self.memories.items() if not memory.get("is_summary", False)
+        }
+        memory_keys = list(non_summary_memories.keys())
+        embeddings = np.array([non_summary_memories[key]["embedding"] for key in memory_keys])
+        distances = np.linalg.norm(np.array(embeddings) - np.array(embedding_vector), axis=1)
+        
+        k = min(TOP_RELEVANT_MEMORIES_TO_FETCH, len(memory_keys))
+        idxs = np.argpartition(distances, k)[:k]
 
         top_memories_keys = np.array(list(self.memories.keys()))[idxs]
         top_memories = [
@@ -135,7 +141,7 @@ class Patient:
         system_prompt = self.prompts["system_preamble"]
 
         if self.conversation_summary is not None:
-            system_prompt += self.prompts["summarize"]["previous_summary"]
+            system_prompt += patient_utils.xml(self.prompts["summarize"]["previous_summary"], "summary")
 
         system_prompt += self.prompts["summarize"]["command"]
         system_prompt = self._parse(
@@ -217,11 +223,10 @@ class Patient:
                 self.prompts["memories_topic"]["preamble"],
                 {"CONTENT": self.memories[topic]["content"]},
             )
-            + self.prompts["state_descriptions"]["importance_descriptions"][importance_likert]
-            + self._parse(
+            + patient_utils.xml(self.prompts["state_descriptions"]["importance_descriptions"][importance_likert], "importance")
+            + patient_utils.xml(self._parse(
                 self.prompts["memories_topic"]["mood"],
-                {"MOOD": self.prompts["state_descriptions"]["valence_descriptions"][mood_likert]},
-            )
+                {"MOOD": self.prompts["state_descriptions"]["valence_descriptions"][mood_likert]}), "mood")
         )
 
         return topic_content
@@ -265,7 +270,7 @@ class Patient:
     def _get_verbosity(self, topic: str) -> int:
         # the system prompt will say to produce no more than 8-25 tokens, depending on perceived importance
         perception = self.memories[topic]["importance_belief"] + self.topics[topic]["importance_delta"]
-        return int(np.round(perception * 27 + 8))
+        return int(np.round(perception * 50 + 8))
 
     def _topical_prompt(self, topics: np.ndarray, entailments: np.ndarray) -> Tuple[str, dict]:
         top_topic = topics[np.argmax(entailments)]
