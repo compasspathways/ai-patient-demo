@@ -75,10 +75,16 @@ class Patient:
         return re.sub(pattern, replace, text)
 
     def _get_top_memories(self, embedding_vector: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
-        embeddings = np.array([memory["embedding"] for memory in self.memories.values()])
-        distances = np.linalg.norm(np.array(embeddings) - np.array(embedding_vector), axis=1)
 
-        idxs = np.argpartition(distances, TOP_RELEVANT_MEMORIES_TO_FETCH)[:TOP_RELEVANT_MEMORIES_TO_FETCH]
+        non_summary_memories = {
+            key: memory for key, memory in self.memories.items() if not memory.get("is_summary", False)
+        }
+        memory_keys = list(non_summary_memories.keys())
+        embeddings = np.array([non_summary_memories[key]["embedding"] for key in memory_keys])
+        distances = np.linalg.norm(np.array(embeddings) - np.array(embedding_vector), axis=1)
+        
+        k = min(TOP_RELEVANT_MEMORIES_TO_FETCH, len(memory_keys))
+        idxs = np.argpartition(distances, k)[:k]
 
         top_memories_keys = np.array(list(self.memories.keys()))[idxs]
         top_memories = [
@@ -135,7 +141,7 @@ class Patient:
         system_prompt = self.prompts["system_preamble"]
 
         if self.conversation_summary is not None:
-            system_prompt += self.prompts["summarize"]["previous_summary"]
+            system_prompt += patient_utils.xml(self.prompts["summarize"]["previous_summary"], "summary")
 
         system_prompt += self.prompts["summarize"]["command"]
         system_prompt = self._parse(
