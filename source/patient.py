@@ -223,11 +223,10 @@ class Patient:
                 self.prompts["memories_topic"]["preamble"],
                 {"CONTENT": self.memories[topic]["content"]},
             )
-            + self.prompts["state_descriptions"]["importance_descriptions"][importance_likert]
-            + self._parse(
+            + patient_utils.xml(self.prompts["state_descriptions"]["importance_descriptions"][importance_likert], "importance")
+            + patient_utils.xml(self._parse(
                 self.prompts["memories_topic"]["mood"],
-                {"MOOD": self.prompts["state_descriptions"]["valence_descriptions"][mood_likert]},
-            )
+                {"MOOD": self.prompts["state_descriptions"]["valence_descriptions"][mood_likert]}), "mood")
         )
 
         return topic_content
@@ -271,7 +270,7 @@ class Patient:
     def _get_verbosity(self, topic: str) -> int:
         # the system prompt will say to produce no more than 8-25 tokens, depending on perceived importance
         perception = self.memories[topic]["importance_belief"] + self.topics[topic]["importance_delta"]
-        return int(np.round(perception * 27 + 8))
+        return int(np.round(perception * 50 + 8))
 
     def _topical_prompt(self, topics: np.ndarray, entailments: np.ndarray) -> Tuple[str, dict]:
         top_topic = topics[np.argmax(entailments)]
