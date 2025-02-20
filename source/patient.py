@@ -377,8 +377,8 @@ class Patient:
                 )
             )
 
-        system_prompt += self._parse(self.prompts["reflect"]["final_command"])
-
+        system_prompt += patient_utils.xml(self._parse(self.prompts["reflect"]["final_command"],
+                                     {"RESPONSE": self.conversation[-1]["content"]}), "command")
         messages = [{"role": "system", "content": system_prompt}]
 
         metadata = {"Topic": "None, the patient is reflecting on the conversation"}

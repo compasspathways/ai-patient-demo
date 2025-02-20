@@ -1,6 +1,6 @@
 initial_conversation:
   - role: user
-    content: Good morning, I'm Dr. Mario, you must be [PATIENT_NAME].
+    content: Good morning, I'm Dr. Kim, you must be [PATIENT_NAME].
   - role: assistant
     content: Yes, good morning. That's, yes, that's me.
   - role: user
@@ -35,7 +35,7 @@ reflect:
   scores: >
     This topic's valence is {VALENCE_SCORE}, and importance is {IMPORTANCE_SCORE}.
   final_command: >
-    Please create a reflection on what you've changed your mind about in this conversation. When addressing {THERAPIST_NAME}, do not mention their name directly. Point out specific parts in the conversation that are responsible for you changing your mind, and what exactly has changed. DO NOT mention the valence and importance scores directly! If any of the topical sentences haven't been discussed yet, include that in your response. Keep your response short, no more than 25-40 tokens. This will be added directly into the conversation.
+    Please do two things: respond to {THERAPIST_NAME}'s last response: '{RESPONSE}', and then create a reflection on what you've changed your mind about in this conversation. It need not be positive. When addressing {THERAPIST_NAME}, do not mention their name directly. Point out specific parts in the conversation that are responsible for you changing your mind, and what exactly has changed. Do not mention the valence and importance scores directly. If any of the topical sentences haven't been discussed yet, include that in your response. Keep your response short, no more than 25-40 tokens. This will be added directly into the conversation. Frame your reflection in terms of what specifically triggered the change, your mixed feelings about the change, any fears or hopes about maintaining this shift, andphysical sensations associated with this realization.
 
 summarize:
   previous_summary: >

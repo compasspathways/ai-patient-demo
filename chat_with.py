@@ -11,7 +11,7 @@ from source.patient import Patient
 logger = logging.getLogger("ai-patient")
 logger.info("Starting AI Patient ...")
 
-therapist_name = "Dr. Mario"
+therapist_name = "Dr. Kim"
 patient_id = sys.argv[1]
 
 try:

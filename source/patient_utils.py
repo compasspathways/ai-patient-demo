@@ -8,7 +8,7 @@ import sentence_transformers
 
 EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "BAAI/bge-large-en-v1.5")
 MESSAGE_PAD_TOKENS = int(os.getenv("MESSAGE_PAD_TOKENS", 3))
-TOKENS_TO_TRIGGER_SUMMARY = int(os.getenv("TOKENS_TO_TRIGGER_SUMMARY", 150))
+TOKENS_TO_TRIGGER_SUMMARY = int(os.getenv("TOKENS_TO_TRIGGER_SUMMARY", 1000))
 WORD_TO_TOKEN_RATIO = 1.5
 
 
